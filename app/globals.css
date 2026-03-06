@@ -1,26 +1,121 @@
 @import "tailwindcss";
 
+@theme {
+  /* Casino palette — charcoal + burgundy */
+  --color-felt:       #7a5230;
+  --color-felt-light: #8b6340;
+  --color-felt-dark:  #5c3d20;
+  --color-felt-line:  #6b4828;
+
+  --color-gold:       #c8a44a;
+  --color-gold-light: #e8c86a;
+  --color-gold-dark:  #9a7030;
+
+  --color-burgundy:   #7a1826;
+  --color-burgundy-light: #a52035;
+
+  --color-ivory:      #f5f0e8;
+  --color-crimson:    #c0392b;
+
+  /* Road colours */
+  --color-road-banker: #dc2626;
+  --color-road-player: #2563eb;
+  --color-road-tie:    #16a34a;
+
+  /* Chip colours */
+  --color-chip-5:   #e63946;
+  --color-chip-10:  #457b9d;
+  --color-chip-25:  #2d6a4f;
+  --color-chip-50:  #7c3aed;
+  --color-chip-100: #374151;
+  --color-chip-500: #b8860b;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0d0d16;
+  --foreground: #f5f0e8;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Georgia', serif;
+  user-select: none;
+}
+
+/* Felt texture — warm tan/brown like Palms casino table */
+.felt {
+  background-color: #7a5230;
+  background-image:
+    radial-gradient(ellipse at 50% 30%, rgba(255,220,150,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 70%);
+}
+
+/* Burgundy border utility */
+.border-burgundy-shine {
+  border: 3px solid #7a1826;
+  box-shadow: 0 0 12px rgba(122,24,38,0.5), inset 0 0 8px rgba(0,0,0,0.3);
+}
+
+/* Card base */
+.playing-card {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 2px 3px 8px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  position: relative;
+  font-family: 'Georgia', serif;
+}
+
+/* Card deal animation */
+@keyframes dealCard {
+  from { opacity: 0; transform: translateY(-40px) scale(0.8); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);   }
+}
+.deal-animate {
+  animation: dealCard 0.3s ease-out forwards;
+}
+
+/* Result banner */
+@keyframes bannerIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1);   }
+}
+.banner-animate {
+  animation: bannerIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Chip ring */
+.chip-ring {
+  border: 3px dashed rgba(255,255,255,0.5);
+  border-radius: 50%;
+}
+
+/* Betting zone hover glow */
+.bet-zone {
+  transition: background 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+.bet-zone:hover {
+  background: rgba(0,0,0,0.12);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.15);
+}
+.bet-zone:active {
+  background: rgba(0,0,0,0.2);
+}
+
+/* Main zone (Player / Banker) */
+.main-zone {
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.main-zone:hover {
+  background: rgba(0,0,0,0.1);
+}
+.main-zone:active {
+  background: rgba(0,0,0,0.18);
 }

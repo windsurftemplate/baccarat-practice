@@ -1,65 +1,189 @@
-import Image from "next/image";
+'use client';
+import { useReducer } from 'react';
+import { GameState, Action } from '../lib/types';
+import {
+  EMPTY_BETS, createShoe, makePlayer,
+  dealInitial, drawCard, determineOutcome, buildPlayerResult,
+  autoGenerateBets, totalBetAmount,
+} from '../lib/baccarat';
+import BaccaratTable from '../components/BaccaratTable';
 
-export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+const firstPlayer = makePlayer({ name: 'Player 1' });
+
+const initialState: GameState = {
+  phase: 'betting',
+  shoe: createShoe(),
+  playerHand: [],
+  bankerHand: [],
+  players: [firstPlayer],
+  activePlayerId: firstPlayer.id,
+  selectedChip: 25,
+  result: null,
+  history: [],
+};
+
+function reducer(state: GameState, action: Action): GameState {
+  switch (action.type) {
+
+    case 'SELECT_CHIP':
+      return { ...state, selectedChip: action.chip };
+
+    case 'SELECT_PLAYER':
+      return { ...state, activePlayerId: action.id };
+
+    case 'PLACE_BET': {
+      if (state.phase !== 'betting' || !state.activePlayerId) return state;
+      const player = state.players.find(p => p.id === state.activePlayerId);
+      if (!player) return state;
+      const newAmount = player.bets[action.zone] + state.selectedChip;
+      const newTotal = totalBetAmount({ ...player.bets, [action.zone]: newAmount });
+      if (newTotal > player.balance) return state;
+      return {
+        ...state,
+        players: state.players.map(p =>
+          p.id === state.activePlayerId
+            ? { ...p, bets: { ...p.bets, [action.zone]: newAmount } }
+            : p
+        ),
+      };
+    }
+
+    case 'CLEAR_PLAYER_BETS':
+      return {
+        ...state,
+        players: state.players.map(p =>
+          p.id === action.id ? { ...p, bets: { ...EMPTY_BETS } } : p
+        ),
+      };
+
+    case 'AUTOBET': {
+      const player = state.players.find(p => p.id === action.id);
+      if (!player) return state;
+      return {
+        ...state,
+        players: state.players.map(p =>
+          p.id === action.id ? { ...p, bets: autoGenerateBets(p.balance) } : p
+        ),
+      };
+    }
+
+    case 'ADD_PLAYER': {
+      if (state.players.length >= 6) return state;
+      const newPlayer = makePlayer();
+      return {
+        ...state,
+        players: [...state.players, newPlayer],
+        activePlayerId: newPlayer.id,
+      };
+    }
+
+    case 'REMOVE_PLAYER': {
+      if (state.players.length <= 1) return state;
+      const remaining = state.players.filter(p => p.id !== action.id);
+      const newActive = state.activePlayerId === action.id ? remaining[0].id : state.activePlayerId;
+      return { ...state, players: remaining, activePlayerId: newActive };
+    }
+
+    case 'DEAL': {
+      if (state.phase !== 'betting') return state;
+      const hasBets = state.players.some(p => totalBetAmount(p.bets) > 0);
+      if (!hasBets) return state;
+
+      let shoe = state.shoe;
+      if (shoe.length < 52) shoe = createShoe();
+
+      const { playerHand, bankerHand, remainingShoe } = dealInitial(shoe);
+      const pTotal = playerHand.reduce((s, c) => s + c.value, 0) % 10;
+      const bTotal = bankerHand.reduce((s, c) => s + c.value, 0) % 10;
+
+      // Natural: skip hit/stand decisions
+      if (pTotal >= 8 || bTotal >= 8) {
+        return finishRound({ ...state, shoe: remainingShoe }, playerHand, bankerHand, remainingShoe);
+      }
+
+      return {
+        ...state,
+        phase: 'player-turn',
+        shoe: remainingShoe,
+        playerHand,
+        bankerHand,
+      };
+    }
+
+    case 'PLAYER_HIT': {
+      if (state.phase !== 'player-turn') return state;
+      const { card, remainingShoe } = drawCard(state.shoe);
+      return { ...state, phase: 'banker-turn', shoe: remainingShoe, playerHand: [...state.playerHand, card] };
+    }
+
+    case 'PLAYER_STAND':
+      if (state.phase !== 'player-turn') return state;
+      return { ...state, phase: 'banker-turn' };
+
+    case 'BANKER_HIT': {
+      if (state.phase !== 'banker-turn') return state;
+      const { card, remainingShoe } = drawCard(state.shoe);
+      return finishRound(state, state.playerHand, [...state.bankerHand, card], remainingShoe);
+    }
+
+    case 'BANKER_STAND':
+      if (state.phase !== 'banker-turn') return state;
+      return finishRound(state, state.playerHand, state.bankerHand, state.shoe);
+
+    case 'NEXT_ROUND':
+      return {
+        ...state,
+        phase: 'betting',
+        playerHand: [],
+        bankerHand: [],
+        players: state.players.map(p => ({ ...p, bets: { ...EMPTY_BETS } })),
+        result: null,
+      };
+
+    case 'REBET': {
+      if (state.phase !== 'betting' || !state.result) return state;
+      return {
+        ...state,
+        players: state.players.map(p => {
+          const lastBets = state.result!.playerResults.find(r => r.playerId === p.id)?.betsPlaced;
+          if (!lastBets) return p;
+          return totalBetAmount(lastBets) <= p.balance ? { ...p, bets: { ...lastBets } } : p;
+        }),
+      };
+    }
+
+    default:
+      return state;
+  }
+}
+
+function finishRound(
+  state: GameState,
+  playerHand: GameState['playerHand'],
+  bankerHand: GameState['bankerHand'],
+  shoe: GameState['shoe'],
+): GameState {
+  const outcome = determineOutcome(playerHand, bankerHand);
+  const playerResults = state.players
+    .filter(p => totalBetAmount(p.bets) > 0)
+    .map(p => buildPlayerResult(p, outcome));
+  const result = { playerHand, bankerHand, outcome, playerResults };
+  return {
+    ...state,
+    phase: 'result',
+    shoe,
+    playerHand,
+    bankerHand,
+    players: state.players.map(p => {
+      const pr = playerResults.find(r => r.playerId === p.id);
+      return pr ? { ...p, balance: p.balance + pr.netChange } : p;
+    }),
+    result,
+    history: [...state.history, result],
+  };
+}
+
+export default function Page() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  return <BaccaratTable state={state} dispatch={dispatch} />;
 }
