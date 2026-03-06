@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { GamePhase } from '../lib/types';
 import ChipTray from './ChipTray';
 
@@ -13,12 +14,39 @@ interface Props {
 }
 
 export default function StatsBar({ phase, totalBets, shoeCount, canDeal, selectedChip, onSelectChip, onDeal }: Props) {
+  const [showTotal, setShowTotal] = useState(false);
+
   return (
     <div style={{ background: 'rgba(0,0,0,0.6)', borderTop: '2px solid #7a1826' }}>
       <div className="flex items-center justify-between px-3 py-1.5">
-        <div className="flex gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          <span>Shoe: <strong style={{ color: '#e8c86a' }}>{shoeCount}</strong></span>
-          {totalBets > 0 && <span>Total bets: <strong style={{ color: '#e8c86a' }}>${totalBets}</strong></span>}
+
+        {/* Bottom-left: shoe count + total bets (hidden until tap) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10 }}>
+            Shoe: <strong style={{ color: 'rgba(232,200,106,0.6)' }}>{shoeCount}</strong>
+          </span>
+          {totalBets > 0 && (
+            <button
+              onClick={() => setShowTotal(s => !s)}
+              style={{
+                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}
+            >
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Total:</span>
+              <strong style={{
+                color: '#e8c86a',
+                fontSize: 22,
+                fontFamily: 'Georgia, serif',
+                letterSpacing: '0.05em',
+                filter: showTotal ? 'none' : 'blur(6px)',
+                transition: 'filter 0.2s',
+                userSelect: 'none',
+              }}>
+                ${totalBets}
+              </strong>
+            </button>
+          )}
         </div>
 
         {phase === 'betting' && (
@@ -31,6 +59,9 @@ export default function StatsBar({ phase, totalBets, shoeCount, canDeal, selecte
               color: canDeal ? '#fff' : 'rgba(255,255,255,0.3)',
               boxShadow: canDeal ? '0 0 18px rgba(122,24,38,0.6), 0 2px 8px rgba(0,0,0,0.5)' : 'none',
               border: canDeal ? '1px solid rgba(200,80,100,0.5)' : '1px solid transparent',
+              touchAction: 'manipulation',
+              minWidth: 72,
+              minHeight: 40,
             }}
           >
             DEAL

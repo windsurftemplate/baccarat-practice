@@ -21,19 +21,20 @@ export default function ChipTray({ selected, onSelect }: Props) {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'flex-end',
-      gap: 10,
-      padding: '6px 12px 12px',
+      gap: 'clamp(4px, 1.5vw, 10px)',
+      padding: '6px clamp(4px, 2vw, 12px) 10px',
     }}>
       {CHIP_DEFS.map(chip => {
         const active = selected === chip.value;
+        const size = 'clamp(42px, 8vw, 54px)';
         return (
           <button
             key={chip.value}
             onClick={() => onSelect(chip.value)}
             title={`$${chip.value}`}
             style={{
-              width: 54,
-              height: 54,
+              width: size,
+              height: size,
               borderRadius: '50%',
               background: `radial-gradient(circle at 35% 35%, ${chip.rim}, ${chip.color})`,
               border: active ? '3px solid #e8c86a' : `3px solid ${chip.rim}`,
@@ -48,6 +49,7 @@ export default function ChipTray({ selected, onSelect }: Props) {
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              touchAction: 'manipulation',
             }}
           >
             {/* Dashed inner ring */}
@@ -61,7 +63,7 @@ export default function ChipTray({ selected, onSelect }: Props) {
             {/* Value label */}
             <span style={{
               color: chip.text,
-              fontSize: chip.value >= 100 ? 11 : 13,
+              fontSize: chip.value >= 100 ? 'clamp(9px, 1.5vw, 11px)' : 'clamp(10px, 1.8vw, 13px)',
               fontWeight: 900,
               fontFamily: 'Georgia, serif',
               letterSpacing: -0.5,

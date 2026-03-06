@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  /* Casino palette — charcoal + burgundy */
-  --color-felt:       #7a5230;
-  --color-felt-light: #8b6340;
-  --color-felt-dark:  #5c3d20;
-  --color-felt-line:  #6b4828;
+  /* Casino green palette */
+  --color-felt:       #0c4220;
+  --color-felt-light: #155c30;
+  --color-felt-dark:  #072914;
+  --color-felt-line:  #0e5228;
 
   --color-gold:       #c8a44a;
   --color-gold-light: #e8c86a;
@@ -32,8 +32,13 @@
 }
 
 :root {
-  --background: #0d0d16;
+  --background: #080c10;
   --foreground: #f5f0e8;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -41,20 +46,18 @@ body {
   color: var(--foreground);
   font-family: 'Georgia', serif;
   user-select: none;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Felt texture — warm tan/brown like Palms casino table */
+/* Casino green felt — dark rich green like a real baccarat table */
 .felt {
-  background-color: #7a5230;
+  background-color: #0c4220;
   background-image:
-    radial-gradient(ellipse at 50% 30%, rgba(255,220,150,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 70%);
-}
-
-/* Burgundy border utility */
-.border-burgundy-shine {
-  border: 3px solid #7a1826;
-  box-shadow: 0 0 12px rgba(122,24,38,0.5), inset 0 0 8px rgba(0,0,0,0.3);
+    radial-gradient(ellipse at 50% 0%,   rgba(255,255,255,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 110%, rgba(0,0,0,0.45) 0%, transparent 70%),
+    radial-gradient(ellipse at 20% 50%,  rgba(255,255,255,0.025) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 50%,  rgba(255,255,255,0.025) 0%, transparent 45%);
 }
 
 /* Card base */
@@ -69,18 +72,72 @@ body {
   font-weight: 700;
   position: relative;
   font-family: 'Georgia', serif;
+  flex-shrink: 0;
 }
 
-/* Card deal animation */
-@keyframes dealCard {
-  from { opacity: 0; transform: translateY(-40px) scale(0.8); }
-  to   { opacity: 1; transform: translateY(0)     scale(1);   }
+/* === CARD DEAL FROM SHOE (comes from upper-right, rotated) === */
+@keyframes dealFromShoe {
+  from {
+    opacity: 0;
+    transform: translateX(100px) translateY(-40px) rotate(15deg) scale(0.65);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-5px) translateY(3px) rotate(-2deg) scale(1.05);
+  }
+  80% {
+    transform: translateX(2px) translateY(-1px) rotate(0.5deg) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+  }
 }
+
 .deal-animate {
-  animation: dealCard 0.3s ease-out forwards;
+  animation: dealFromShoe 0.48s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
-/* Result banner */
+/* === CHIP BOUNCES ONTO BET SPOT === */
+@keyframes chipLand {
+  from {
+    transform: translateY(-60px) scale(0.3) rotate(-20deg);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(8px) scale(1.2) rotate(3deg);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(-4px) scale(0.93) rotate(-1deg);
+  }
+  85% {
+    transform: translateY(3px) scale(1.04) rotate(0.5deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* === WINNER ZONE GLOW PULSE === */
+@keyframes winnerGlow {
+  0%, 100% {
+    box-shadow: 0 0 12px var(--glow, rgba(255,255,255,0.3)),
+                inset 0 0 20px rgba(255,255,255,0.03);
+  }
+  50% {
+    box-shadow: 0 0 35px var(--glow, rgba(255,255,255,0.5)),
+                0 0 70px var(--glow, rgba(255,255,255,0.2)),
+                inset 0 0 30px rgba(255,255,255,0.06);
+  }
+}
+
+.winner-glow {
+  animation: winnerGlow 1.4s ease-in-out infinite;
+}
+
+/* === RESULT BANNER IN === */
 @keyframes bannerIn {
   from { opacity: 0; transform: scale(0.7); }
   to   { opacity: 1; transform: scale(1);   }
@@ -89,33 +146,50 @@ body {
   animation: bannerIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
+/* === AMBIENT TABLE GLOW (breathing effect on betting phase) === */
+@keyframes tableBreath {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1;   }
+}
+
+/* === SEAT ROW HIGHLIGHT === */
+@keyframes seatBetFlash {
+  0%   { background-color: rgba(255,255,255,0.08); }
+  100% { background-color: transparent; }
+}
+
 /* Chip ring */
 .chip-ring {
   border: 3px dashed rgba(255,255,255,0.5);
   border-radius: 50%;
 }
 
-/* Betting zone hover glow */
+/* Betting zone hover */
 .bet-zone {
   transition: background 0.15s, box-shadow 0.15s;
   cursor: pointer;
 }
 .bet-zone:hover {
-  background: rgba(0,0,0,0.12);
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.15);
+  background: rgba(0,0,0,0.15);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
 }
 .bet-zone:active {
-  background: rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.22);
 }
 
-/* Main zone (Player / Banker) */
+/* Bet spot (individual circle) hover  */
+.bet-spot:hover .bet-spot-ring {
+  border-color: rgba(255,255,255,0.35) !important;
+  background: rgba(255,255,255,0.05) !important;
+}
+.bet-spot:active {
+  transform: scale(0.94);
+}
+
+/* Main zone */
 .main-zone {
   transition: background 0.15s;
   cursor: pointer;
 }
-.main-zone:hover {
-  background: rgba(0,0,0,0.1);
-}
-.main-zone:active {
-  background: rgba(0,0,0,0.18);
-}
+.main-zone:hover  { background: rgba(0,0,0,0.1); }
+.main-zone:active { background: rgba(0,0,0,0.18); }

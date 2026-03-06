@@ -13,13 +13,16 @@ interface Props {
   faceDown?: boolean;
 }
 
+const CARD_W = 'clamp(52px, 9vw, 152px)';
+const CARD_H = 'clamp(74px, 13vw, 216px)';
+
 export default function Card({ card, delay = 0, faceDown = false }: Props) {
   if (faceDown) {
     return (
       <div
         className="playing-card deal-animate"
         style={{
-          width: 152, height: 216,
+          width: CARD_W, height: CARD_H,
           animationDelay: `${delay}ms`,
           background: '#1a3a8c',
           border: '2px solid #c8a44a',
@@ -41,24 +44,24 @@ export default function Card({ card, delay = 0, faceDown = false }: Props) {
   return (
     <div
       className="playing-card deal-animate select-none"
-      style={{ width: 152, height: 216, animationDelay: `${delay}ms` }}
+      style={{ width: CARD_W, height: CARD_H, animationDelay: `${delay}ms` }}
     >
       {/* Top-left */}
-      <div style={{ position: 'absolute', top: 8, left: 12, fontSize: 30, color, lineHeight: 1.1 }}>
+      <div style={{ position: 'absolute', top: '5%', left: '8%', fontSize: 'clamp(12px, 2.5vw, 30px)', color, lineHeight: 1.1 }}>
         <div style={{ fontWeight: 800 }}>{card.rank}</div>
-        <div style={{ fontSize: 24 }}>{sym}</div>
+        <div style={{ fontSize: 'clamp(10px, 2vw, 24px)' }}>{sym}</div>
       </div>
 
       {/* Center suit */}
-      <div style={{ fontSize: 68, color }}>{sym}</div>
+      <div style={{ fontSize: 'clamp(26px, 5vw, 68px)', color }}>{sym}</div>
 
       {/* Bottom-right (rotated) */}
       <div style={{
-        position: 'absolute', bottom: 8, right: 12, fontSize: 30,
+        position: 'absolute', bottom: '5%', right: '8%', fontSize: 'clamp(12px, 2.5vw, 30px)',
         color, lineHeight: 1.1, transform: 'rotate(180deg)',
       }}>
         <div style={{ fontWeight: 800 }}>{card.rank}</div>
-        <div style={{ fontSize: 24 }}>{sym}</div>
+        <div style={{ fontSize: 'clamp(10px, 2vw, 24px)' }}>{sym}</div>
       </div>
     </div>
   );

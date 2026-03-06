@@ -26,6 +26,8 @@ export default function HitStandControls({ which, total, onHit, onStand }: Props
             color: '#fff',
             boxShadow: '0 0 10px rgba(22,163,74,0.5)',
             border: '1px solid #4ade80',
+            touchAction: 'manipulation',
+            minWidth: 80,
           }}
         >
           HIT
@@ -38,6 +40,8 @@ export default function HitStandControls({ which, total, onHit, onStand }: Props
             color: '#fff',
             boxShadow: '0 0 10px rgba(220,38,38,0.5)',
             border: '1px solid #f87171',
+            touchAction: 'manipulation',
+            minWidth: 80,
           }}
         >
           STAND

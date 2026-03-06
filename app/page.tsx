@@ -32,8 +32,8 @@ function reducer(state: GameState, action: Action): GameState {
       return { ...state, activePlayerId: action.id };
 
     case 'PLACE_BET': {
-      if (state.phase !== 'betting' || !state.activePlayerId) return state;
-      const player = state.players.find(p => p.id === state.activePlayerId);
+      if (state.phase !== 'betting') return state;
+      const player = state.players.find(p => p.id === action.playerId);
       if (!player) return state;
       const newAmount = player.bets[action.zone] + state.selectedChip;
       const newTotal = totalBetAmount({ ...player.bets, [action.zone]: newAmount });
@@ -41,7 +41,7 @@ function reducer(state: GameState, action: Action): GameState {
       return {
         ...state,
         players: state.players.map(p =>
-          p.id === state.activePlayerId
+          p.id === action.playerId
             ? { ...p, bets: { ...p.bets, [action.zone]: newAmount } }
             : p
         ),

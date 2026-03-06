@@ -37,11 +37,12 @@ export default function BettingZone({ zone, label, payout, betAmount, disabled, 
       className="bet-zone relative flex flex-col items-center rounded-lg border select-none"
       style={{
         borderColor: 'rgba(255,255,255,0.18)',
-        minHeight: 100,
+        minHeight: 'clamp(70px, 12vw, 100px)',
         padding: '6px 6px 7px',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.35 : 1,
         justifyContent: 'flex-end',
+        touchAction: 'manipulation',
       }}
       onClick={() => !disabled && onClick(zone)}
     >

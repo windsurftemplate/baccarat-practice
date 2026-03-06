@@ -76,7 +76,7 @@ export interface GameState {
 export type Action =
   | { type: 'SELECT_CHIP'; chip: number }
   | { type: 'SELECT_PLAYER'; id: string }
-  | { type: 'PLACE_BET'; zone: BetKey }
+  | { type: 'PLACE_BET'; zone: BetKey; playerId: string }
   | { type: 'CLEAR_PLAYER_BETS'; id: string }
   | { type: 'AUTOBET'; id: string }
   | { type: 'ADD_PLAYER' }

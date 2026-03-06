@@ -92,12 +92,12 @@ export default function ResultBanner({ result, onNext, onRebet }: Props) {
         <div className="flex gap-3 mt-1">
           <button onClick={onRebet}
             className="px-4 py-2 rounded-lg text-sm font-semibold"
-            style={{ background: 'rgba(200,164,74,0.2)', color: '#e8c86a', border: '1px solid rgba(200,164,74,0.5)' }}>
+            style={{ background: 'rgba(200,164,74,0.2)', color: '#e8c86a', border: '1px solid rgba(200,164,74,0.5)', touchAction: 'manipulation', minHeight: 44 }}>
             Rebet
           </button>
           <button onClick={onNext}
             className="px-5 py-2 rounded-lg text-sm font-bold"
-            style={{ background: '#c8a44a', color: '#082a18' }}>
+            style={{ background: '#c8a44a', color: '#082a18', touchAction: 'manipulation', minHeight: 44 }}>
             Next Hand →
           </button>
         </div>
