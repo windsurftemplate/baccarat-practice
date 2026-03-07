@@ -1,6 +1,48 @@
 'use client';
 import Link from 'next/link';
 
+// ─── Playing card ────────────────────────────────────────────────────────────
+
+const SUITS: Record<string, { symbol: string; color: string; isRed: boolean }> = {
+  spades:   { symbol: '♠', color: '#0f172a', isRed: false },
+  hearts:   { symbol: '♥', color: '#be123c', isRed: true  },
+  diamonds: { symbol: '♦', color: '#be123c', isRed: true  },
+  clubs:    { symbol: '♣', color: '#0f172a', isRed: false },
+};
+
+function FloatingCard({ rank, suit, className, style }: {
+  rank: string; suit: keyof typeof SUITS; className: string; style?: React.CSSProperties;
+}) {
+  const s = SUITS[suit];
+  return (
+    <div className={className} style={{
+      position: 'absolute',
+      width: 62, height: 88,
+      background: 'linear-gradient(165deg, #ffffff 0%, #f5f0e8 100%)',
+      borderRadius: 7,
+      boxShadow: '0 14px 48px rgba(0,0,0,0.92), 0 4px 12px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,1)',
+      border: '1px solid #ddd5c8',
+      overflow: 'hidden',
+      ...style,
+    }}>
+      {/* Top-left index */}
+      <div style={{ position: 'absolute', top: 4, left: 5, color: s.color, fontFamily: 'Arial, sans-serif', lineHeight: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, fontWeight: 900 }}>{rank}</span>
+        <span style={{ fontSize: 10 }}>{s.symbol}</span>
+      </div>
+      {/* Bottom-right index (flipped) */}
+      <div style={{ position: 'absolute', bottom: 4, right: 5, color: s.color, fontFamily: 'Arial, sans-serif', lineHeight: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', transform: 'rotate(180deg)' }}>
+        <span style={{ fontSize: 13, fontWeight: 900 }}>{rank}</span>
+        <span style={{ fontSize: 10 }}>{s.symbol}</span>
+      </div>
+      {/* Center pip */}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: s.color, fontSize: 26, lineHeight: 1, textShadow: s.isRed ? '0 1px 4px rgba(190,18,60,0.2)' : '0 1px 3px rgba(0,0,0,0.1)' }}>{s.symbol}</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Baccarat road bead ───────────────────────────────────────────────────────
 
 const BEAD_CFG = {
@@ -8,38 +50,6 @@ const BEAD_CFG = {
   P: { bg: '#1d4ed8', rim: '#93c5fd', label: 'P' },
   T: { bg: '#15803d', rim: '#86efac', label: 'T' },
 };
-
-function RoadBead({ outcome, size = 44, className, style }: {
-  outcome: 'B' | 'P' | 'T';
-  size?: number;
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  const c = BEAD_CFG[outcome];
-  return (
-    <div className={className} style={{
-      position: 'absolute',
-      width: size, height: size, borderRadius: '50%',
-      background: `radial-gradient(ellipse at 32% 28%, ${c.rim}cc, ${c.bg} 55%, #000 130%)`,
-      border: `2.5px solid ${c.rim}`,
-      boxShadow: [
-        `0 ${Math.round(size * 0.07)}px 0 rgba(0,0,0,0.6)`,
-        `0 ${Math.round(size * 0.18)}px ${Math.round(size * 0.3)}px rgba(0,0,0,0.7)`,
-        `inset 0 2px 4px rgba(255,255,255,0.4)`,
-        `inset 0 -2px 4px rgba(0,0,0,0.4)`,
-      ].join(', '),
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      ...style,
-    }}>
-      <span style={{
-        color: '#fff', fontWeight: 900, fontSize: size * 0.38,
-        fontFamily: 'Arial Black, Arial, sans-serif',
-        textShadow: '0 1px 3px rgba(0,0,0,0.7)',
-        lineHeight: 1,
-      }}>{c.label}</span>
-    </div>
-  );
-}
 
 // Mini road grid — decorative background scorecard
 const ROAD: Array<'B' | 'P' | 'T'> = [
@@ -184,23 +194,25 @@ export default function LandingPage() {
           background: 'linear-gradient(90deg, transparent 0%, rgba(200,164,74,0.3) 20%, rgba(200,164,74,0.7) 50%, rgba(200,164,74,0.3) 80%, transparent 100%)',
         }} />
 
-        {/* Dragon (left) and Panda (right) — full-height background mascots */}
-        <div style={{
-          position: 'absolute', left: 0, top: 0, bottom: 0,
-          display: 'flex', alignItems: 'center',
-          fontSize: 'min(55vw, 340px)', lineHeight: 1,
-          opacity: 0.12, pointerEvents: 'none', userSelect: 'none',
-          filter: 'drop-shadow(0 0 32px rgba(34,197,94,0.35))',
-          transform: 'scaleX(-1) translateX(12%)',
-        }}>🐉</div>
-        <div style={{
-          position: 'absolute', right: 0, top: 0, bottom: 0,
-          display: 'flex', alignItems: 'center',
-          fontSize: 'min(48vw, 300px)', lineHeight: 1,
-          opacity: 0.11, pointerEvents: 'none', userSelect: 'none',
-          filter: 'drop-shadow(0 0 28px rgba(255,255,255,0.25))',
-          transform: 'translateX(14%)',
-        }}>🐼</div>
+        {/* Dragon (left) — bigger, detailed glow layers */}
+        <div style={{ position: 'absolute', left: '-8%', top: 0, bottom: 0, display: 'flex', alignItems: 'center', pointerEvents: 'none', userSelect: 'none' }}>
+          {/* Ambient glow behind dragon */}
+          <div style={{ position: 'absolute', width: '110%', height: '80%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(34,197,94,0.18) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+          {/* Shadow copy for depth */}
+          <span style={{ position: 'absolute', fontSize: 'min(72vw, 440px)', lineHeight: 1, transform: 'scaleX(-1) translate(6%, 3%)', opacity: 0.06, filter: 'blur(8px)' }}>🐉</span>
+          {/* Main dragon */}
+          <span style={{ fontSize: 'min(72vw, 440px)', lineHeight: 1, transform: 'scaleX(-1)', opacity: 0.22, filter: 'drop-shadow(0 0 24px rgba(34,197,94,0.6)) drop-shadow(0 0 60px rgba(34,197,94,0.3))' }}>🐉</span>
+        </div>
+
+        {/* Panda (right) — bigger, detailed glow layers */}
+        <div style={{ position: 'absolute', right: '-8%', top: 0, bottom: 0, display: 'flex', alignItems: 'center', pointerEvents: 'none', userSelect: 'none' }}>
+          {/* Ambient glow behind panda */}
+          <div style={{ position: 'absolute', width: '110%', height: '80%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(200,200,220,0.14) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+          {/* Shadow copy for depth */}
+          <span style={{ position: 'absolute', fontSize: 'min(65vw, 400px)', lineHeight: 1, transform: 'translate(-6%, 3%)', opacity: 0.06, filter: 'blur(8px)' }}>🐼</span>
+          {/* Main panda */}
+          <span style={{ fontSize: 'min(65vw, 400px)', lineHeight: 1, opacity: 0.2, filter: 'drop-shadow(0 0 22px rgba(255,255,255,0.5)) drop-shadow(0 0 55px rgba(200,200,220,0.25))' }}>🐼</span>
+        </div>
 
         {/* Large faded suit symbols in corners */}
         {[
@@ -251,14 +263,14 @@ export default function LandingPage() {
         {/* Faint baccarat road grid in background */}
         <MiniRoad style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%) rotate(-4deg)', opacity: 0.07, zIndex: 0, pointerEvents: 'none' }} />
 
-        {/* Floating road beads */}
-        <RoadBead outcome="B" size={48} className="landing-card-a" style={{ top: '8%',    left: '6%',   opacity: 0.65, zIndex: 0 }} />
-        <RoadBead outcome="P" size={38} className="landing-card-b" style={{ top: '5%',    right: '7%',  opacity: 0.6,  zIndex: 0 }} />
-        <RoadBead outcome="B" size={42} className="landing-card-c" style={{ bottom: '18%', left: '7%',  opacity: 0.55, zIndex: 0 }} />
-        <RoadBead outcome="P" size={50} className="landing-card-d" style={{ bottom: '20%', right: '6%', opacity: 0.6,  zIndex: 0 }} />
-        <RoadBead outcome="T" size={34} className="landing-card-e" style={{ top: '28%',   right: '2%',  opacity: 0.45, zIndex: 0 }} />
-        <RoadBead outcome="B" size={36} className="landing-card-f" style={{ top: '22%',   left: '2%',   opacity: 0.4,  zIndex: 0 }} />
-        <RoadBead outcome="P" size={30} className="landing-card-g" style={{ bottom: '32%', right: '3%', opacity: 0.35, zIndex: 0 }} />
+        {/* Floating playing cards */}
+        <FloatingCard rank="A" suit="spades"   className="landing-card-a" style={{ top: '7%',    left: '14%',  opacity: 0.85, zIndex: 1 }} />
+        <FloatingCard rank="K" suit="hearts"   className="landing-card-b" style={{ top: '6%',    right: '13%', opacity: 0.8,  zIndex: 1 }} />
+        <FloatingCard rank="9" suit="diamonds" className="landing-card-c" style={{ bottom: '14%', left: '16%', opacity: 0.7,  zIndex: 1 }} />
+        <FloatingCard rank="8" suit="clubs"    className="landing-card-d" style={{ bottom: '15%', right: '14%',opacity: 0.75, zIndex: 1 }} />
+        <FloatingCard rank="Q" suit="hearts"   className="landing-card-e" style={{ top: '32%',   right: '9%',  opacity: 0.5,  zIndex: 1 }} />
+        <FloatingCard rank="J" suit="spades"   className="landing-card-f" style={{ top: '26%',   left: '9%',   opacity: 0.5,  zIndex: 1 }} />
+        <FloatingCard rank="7" suit="diamonds" className="landing-card-g" style={{ bottom: '28%', right: '10%',opacity: 0.4,  zIndex: 1 }} />
 
         {/* Left chip tower */}
         <ChipTower values={[5, 1, 5, 20, 5, 1, 20]} style={{ position: 'absolute', left: '3%', bottom: '20%', opacity: 0.65, zIndex: 0 }} />
