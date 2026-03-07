@@ -133,6 +133,22 @@ export default function LandingPage() {
           background: 'linear-gradient(90deg, transparent 0%, rgba(200,164,74,0.3) 20%, rgba(200,164,74,0.7) 50%, rgba(200,164,74,0.3) 80%, transparent 100%)',
         }} />
 
+        {/* Dragon (left) and Panda (right) — baccarat bonus mascots */}
+        <div style={{
+          position: 'absolute', left: '-2%', top: '50%',
+          transform: 'translateY(-54%) scaleX(-1)',
+          fontSize: 148, lineHeight: 1,
+          opacity: 0.13, pointerEvents: 'none', userSelect: 'none',
+          filter: 'drop-shadow(0 0 24px rgba(34,197,94,0.4))',
+        }}>🐉</div>
+        <div style={{
+          position: 'absolute', right: '-2%', top: '50%',
+          transform: 'translateY(-46%)',
+          fontSize: 130, lineHeight: 1,
+          opacity: 0.13, pointerEvents: 'none', userSelect: 'none',
+          filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))',
+        }}>🐼</div>
+
         {/* Large faded suit symbols in corners */}
         {[
           { s: '♠', c: 'rgba(255,255,255,0.035)', sz: 130, t: '2%',  l: '-3%', rot: '-12deg' },
