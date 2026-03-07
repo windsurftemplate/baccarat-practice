@@ -252,11 +252,34 @@ body {
   to   { transform: rotate(360deg); }
 }
 
+@keyframes floatF {
+  0%, 100% { transform: translateY(0px) rotate(6deg); }
+  50%       { transform: translateY(-16px) rotate(8deg); }
+}
+@keyframes floatG {
+  0%, 100% { transform: translateY(-4px) rotate(-20deg); }
+  50%       { transform: translateY(12px) rotate(-18deg); }
+}
+
+@keyframes spinCW {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes spinCCW {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
 .landing-card-a { animation: floatA 4.1s ease-in-out infinite; }
 .landing-card-b { animation: floatB 3.7s ease-in-out infinite; }
 .landing-card-c { animation: floatC 4.5s ease-in-out infinite 0.5s; }
 .landing-card-d { animation: floatD 3.9s ease-in-out infinite 1s; }
 .landing-card-e { animation: floatE 4.8s ease-in-out infinite 0.3s; }
+.landing-card-f { animation: floatF 4.3s ease-in-out infinite 0.8s; }
+.landing-card-g { animation: floatG 5.0s ease-in-out infinite 1.5s; }
+
+.spin-ring-cw  { animation: spinCW  28s linear infinite; }
+.spin-ring-ccw { animation: spinCCW 42s linear infinite; }
 
 .shimmer-gold {
   background: linear-gradient(90deg, #c8a44a 0%, #fff8dc 40%, #e8c86a 60%, #c8a44a 100%);
