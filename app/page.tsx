@@ -146,21 +146,33 @@ function ChipTower({ values, style }: { values: number[]; style?: React.CSSPrope
 // ─── Chip-fall transition ─────────────────────────────────────────────────────
 
 const FALL_CHIPS: Array<{ value: number; left: string; delay: string; dur: string }> = [
-  { value: 100, left: '-4%',  delay:   '0ms', dur: '680ms' },
-  { value:   5, left:  '9%',  delay:  '40ms', dur: '720ms' },
-  { value:  20, left: '22%',  delay:  '10ms', dur: '695ms' },
-  { value:   1, left: '35%',  delay:  '60ms', dur: '740ms' },
-  { value:   5, left: '48%',  delay:   '5ms', dur: '685ms' },
-  { value: 100, left: '61%',  delay:  '50ms', dur: '710ms' },
-  { value:  20, left: '74%',  delay:  '25ms', dur: '730ms' },
-  { value:   1, left: '86%',  delay:  '70ms', dur: '690ms' },
-  { value:   5, left:  '3%',  delay: '110ms', dur: '715ms' },
-  { value: 100, left: '16%',  delay: '130ms', dur: '680ms' },
-  { value:   1, left: '29%',  delay: '100ms', dur: '725ms' },
-  { value:  20, left: '43%',  delay: '145ms', dur: '695ms' },
-  { value:   5, left: '57%',  delay:  '90ms', dur: '740ms' },
-  { value: 100, left: '70%',  delay: '120ms', dur: '700ms' },
-  { value:   1, left: '83%',  delay: '155ms', dur: '670ms' },
+  // Wave 1 — instant
+  { value: 100, left: '-3%',  delay:   '0ms', dur: '700ms' },
+  { value:   5, left:  '9%',  delay:  '30ms', dur: '720ms' },
+  { value:  20, left: '21%',  delay:  '10ms', dur: '690ms' },
+  { value:   1, left: '33%',  delay:  '50ms', dur: '740ms' },
+  { value:   5, left: '46%',  delay:   '5ms', dur: '710ms' },
+  { value: 100, left: '58%',  delay:  '40ms', dur: '730ms' },
+  { value:  20, left: '70%',  delay:  '20ms', dur: '700ms' },
+  { value:   1, left: '82%',  delay:  '60ms', dur: '720ms' },
+  // Wave 2 — staggered
+  { value:   5, left:  '3%',  delay: '100ms', dur: '710ms' },
+  { value: 100, left: '15%',  delay: '120ms', dur: '690ms' },
+  { value:   1, left: '27%',  delay:  '90ms', dur: '730ms' },
+  { value:  20, left: '39%',  delay: '135ms', dur: '705ms' },
+  { value:   5, left: '52%',  delay:  '80ms', dur: '720ms' },
+  { value: 100, left: '64%',  delay: '115ms', dur: '695ms' },
+  { value:   1, left: '76%',  delay: '145ms', dur: '715ms' },
+  { value:  20, left: '88%',  delay: '105ms', dur: '700ms' },
+  // Wave 3 — fills gaps
+  { value:  20, left:  '6%',  delay: '180ms', dur: '725ms' },
+  { value:   1, left: '18%',  delay: '200ms', dur: '700ms' },
+  { value: 100, left: '30%',  delay: '170ms', dur: '715ms' },
+  { value:   5, left: '42%',  delay: '215ms', dur: '690ms' },
+  { value:  20, left: '55%',  delay: '160ms', dur: '730ms' },
+  { value:   1, left: '67%',  delay: '195ms', dur: '705ms' },
+  { value:   5, left: '79%',  delay: '185ms', dur: '720ms' },
+  { value: 100, left: '91%',  delay: '205ms', dur: '695ms' },
 ];
 
 // ─── Drills ───────────────────────────────────────────────────────────────────
@@ -420,20 +432,6 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Chip-fall transition overlay */}
-        {falling && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, overflow: 'hidden', background: 'rgba(4,6,10,0.88)', pointerEvents: 'all' }}>
-            {FALL_CHIPS.map((fc, i) => (
-              <div key={i} style={{
-                position: 'absolute', left: fc.left, top: '-200px',
-                animation: `chipFall ${fc.dur} ${fc.delay} ease-in forwards`,
-              }}>
-                <Chip value={fc.value} size={184} />
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Chip row decoration */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: -6, marginTop: 22, opacity: 0.4 }}>
           {[1, 5, 20, 100, 5, 1].map((v, i) => (
@@ -451,6 +449,20 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
+
+      {/* Chip-fall transition overlay — at root level so it covers the full viewport */}
+      {falling && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, overflow: 'hidden', background: 'rgba(4,6,10,0.88)', pointerEvents: 'all' }}>
+          {FALL_CHIPS.map((fc, i) => (
+            <div key={i} style={{
+              position: 'absolute', left: fc.left, top: '-200px',
+              animation: `chipFall ${fc.dur} ${fc.delay} ease-in forwards`,
+            }}>
+              <Chip value={fc.value} size={184} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
