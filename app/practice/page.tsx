@@ -6,7 +6,7 @@ const DRILLS = [
     href: '/practice/chips',
     title: 'Chip Count',
     subtitle: 'What is the total?',
-    description: 'Visual stacks of green ($1), red ($5), blue ($20), and purple ($100) chips — count the total value.',
+    description: 'Count full racks (100 chips) and stacks (20 chips) across denominations. Bank totals range from $10k–$40k.',
     color: '#15803d',
     glow: 'rgba(34,197,94,0.5)',
     border: 'rgba(74,222,128,0.4)',
