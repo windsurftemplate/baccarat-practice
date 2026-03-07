@@ -120,6 +120,251 @@ function makeOptions(correct: number): number[] {
   return [...pool].sort(() => Math.random() - 0.5);
 }
 
+// ─── Teaching data ────────────────────────────────────────────────────────────
+
+const PAYOUT_TABLE_BETS = [5, 10, 25, 50, 100];
+
+interface ZoneTeach {
+  why: string;
+  steps: string[];
+  examples: Array<{ bet: number; steps: string[]; result: number }>;
+  memoryTip: string;
+}
+
+const ZONE_TEACH: Record<Zone, ZoneTeach> = {
+  dragon7: {
+    why: '40 = 4 × 10, so multiply by 4 then add a zero.',
+    steps: ['Take the bet', 'Multiply by 4', 'Add a zero (×10)'],
+    examples: [
+      { bet: 25, steps: ['$25 × 4 = $100', '$100 × 10 = $1,000'], result: 1000 },
+      { bet: 35, steps: ['Split: $25 + $10', '$25×40 = $1,000', '$10×40 = $400', '$1,000 + $400 = $1,400'], result: 1400 },
+    ],
+    memoryTip: '"Four times, then add a zero." $5 chip = $200, $25 chip = $1,000.',
+  },
+  panda8: {
+    why: '25 = 100 ÷ 4. So ×25 = ×100 then ÷4 (halve it twice).',
+    steps: ['Take the bet', 'Multiply by 100 (add two zeros)', 'Halve it', 'Halve it again'],
+    examples: [
+      { bet: 25, steps: ['$25 × 100 = $2,500', '÷2 = $1,250', '÷2 = $625'], result: 625 },
+      { bet: 100, steps: ['$100 × 100 = $10,000', '÷2 = $5,000', '÷2 = $2,500'], result: 2500 },
+    ],
+    memoryTip: '"Add two zeros, halve twice." Think: 25¢ = quarter = ¼ of $1, so ×25 = ×100÷4.',
+  },
+  ruby_small: {
+    why: '×10 is the simplest — just move the decimal right one place.',
+    steps: ['Take the bet', 'Add a zero (move decimal right)'],
+    examples: [
+      { bet: 25, steps: ['$25 → $250'], result: 250 },
+      { bet: 35, steps: ['$35 × 10 = $350'], result: 350 },
+    ],
+    memoryTip: '"Just add a zero." Easiest one at the table — instant calculation.',
+  },
+  ruby_big: {
+    why: '75 = 100 − 25. Easier than multiplying by 75 directly.',
+    steps: ['Take the bet', 'Multiply by 100 (add two zeros)', 'Subtract ×25 (which is ×100÷4)'],
+    examples: [
+      { bet: 25, steps: ['$25 × 100 = $2,500', '$25 × 25 = $625', '$2,500 − $625 = $1,875'], result: 1875 },
+      { bet: 10, steps: ['$10 × 100 = $1,000', '$10 × 25 = $250', '$1,000 − $250 = $750'], result: 750 },
+    ],
+    memoryTip: '"Times 100, minus a quarter of that." Alt: ×75 = ×50 + ×25 (double it, then add half).',
+  },
+  tie: {
+    why: '9 = 10 − 1. So ×9 = ×10 then subtract the original bet.',
+    steps: ['Take the bet', 'Multiply by 10 (add a zero)', 'Subtract the original bet'],
+    examples: [
+      { bet: 25, steps: ['$25 × 10 = $250', '$250 − $25 = $225'], result: 225 },
+      { bet: 35, steps: ['$35 × 10 = $350', '$350 − $35 = $315'], result: 315 },
+    ],
+    memoryTip: '"Times ten, give back one." $25 tie = $250 − $25 = $225.',
+  },
+};
+
+// ─── Teaching modal ───────────────────────────────────────────────────────────
+
+function TeachModal({ onClose, zoneStats }: { onClose: () => void; zoneStats: ZoneStats }) {
+  const [tab, setTab] = useState<'table' | 'system'>('table');
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 50,
+      background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: '#111720', borderRadius: '20px 20px 0 0',
+        border: '2px solid rgba(232,200,106,0.25)', borderBottom: 'none',
+        width: '100%', maxWidth: 520,
+        maxHeight: '92dvh', display: 'flex', flexDirection: 'column',
+      }}>
+        {/* Modal header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 0' }}>
+          <div style={{ color: '#e8c86a', fontSize: 13, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            Bonus Payout System
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 20, cursor: 'pointer', lineHeight: 1, padding: 4 }}>✕</button>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', margin: '12px 16px 0', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+          {(['table', 'system'] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{
+              flex: 1, padding: '7px 4px', fontSize: 11, fontWeight: 800,
+              letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', border: 'none',
+              background: tab === t ? 'rgba(232,200,106,0.18)' : 'transparent',
+              color: tab === t ? '#e8c86a' : 'rgba(255,255,255,0.3)',
+              borderBottom: tab === t ? '2px solid #e8c86a' : '2px solid transparent',
+            }}>
+              {t === 'table' ? '📋 Quick Table' : '⚡ How to Calculate'}
+            </button>
+          ))}
+        </div>
+
+        {/* Scrollable content */}
+        <div style={{ overflowY: 'auto', padding: '14px 16px 32px', flex: 1 }}>
+          {tab === 'table' && (
+            <>
+              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, marginBottom: 10, lineHeight: 1.5 }}>
+                Profit paid for each bonus bet. Memorize the <span style={{ color: '#e8c86a' }}>$25</span> row first — it's the most common chip.
+              </div>
+
+              {/* Payout table */}
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ color: 'rgba(255,255,255,0.4)', padding: '5px 6px', textAlign: 'left', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Bet</th>
+                      {ZONES.map(z => (
+                        <th key={z} style={{ padding: '5px 6px', textAlign: 'center', fontWeight: 900, color: ZONE_META[z].color, borderBottom: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap' }}>
+                          {ZONE_META[z].short}<br />
+                          <span style={{ fontSize: 9, opacity: 0.7, fontWeight: 700 }}>{ZONE_META[z].rate}</span>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {PAYOUT_TABLE_BETS.map((bet, ri) => (
+                      <tr key={bet} style={{ background: ri % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
+                        <td style={{ padding: '7px 6px', color: '#e8c86a', fontWeight: 900, fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          ${bet}
+                        </td>
+                        {ZONES.map(z => {
+                          const pays = bet * ZONE_META[z].multiple;
+                          return (
+                            <td key={z} style={{ padding: '7px 6px', textAlign: 'center', color: '#fff', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              ${pays >= 1000 ? `${(pays / 1000).toFixed(pays % 1000 === 0 ? 0 : 1)}k` : pays}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Per-zone accuracy */}
+              <div style={{ marginTop: 16 }}>
+                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Your accuracy per bonus</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {ZONES.map(z => {
+                    const zs = zoneStats[z];
+                    const zpct = zs.total > 0 ? Math.round((zs.correct / zs.total) * 100) : null;
+                    const m = ZONE_META[z];
+                    return (
+                      <div key={z} style={{ borderRadius: 8, padding: '6px 10px', background: `${m.color}12`, border: `1px solid ${m.color}30`, textAlign: 'center', minWidth: 52 }}>
+                        <div style={{ color: m.color, fontSize: 10, fontWeight: 900 }}>{m.short}</div>
+                        <div style={{ color: zpct === null ? 'rgba(255,255,255,0.2)' : zpct >= 90 ? '#4ade80' : zpct >= 70 ? '#fbbf24' : '#f87171', fontSize: 12, fontWeight: 900, marginTop: 2 }}>
+                          {zpct !== null ? `${zpct}%` : '—'}
+                        </div>
+                        {zs.total > 0 && <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 8 }}>{zs.total} tries</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
+          {tab === 'system' && (
+            <>
+              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, marginBottom: 12, lineHeight: 1.5 }}>
+                Each bonus has a mental shortcut. Learn the <b style={{ color: '#e8c86a' }}>system</b> — not just the numbers.
+                For mixed bets, split by denomination and add the results.
+              </div>
+
+              {ZONES.map(z => {
+                const m = ZONE_META[z];
+                const t = ZONE_TEACH[z];
+                return (
+                  <div key={z} style={{ marginBottom: 16, borderRadius: 12, overflow: 'hidden', border: `1.5px solid ${m.color}30` }}>
+                    {/* Zone header */}
+                    <div style={{ background: `${m.color}18`, padding: '9px 13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ color: m.color, fontSize: 14, fontWeight: 900 }}>{m.label}</div>
+                      <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10 }}>{m.trigger}</div>
+                      <div style={{ background: `${m.color}22`, border: `1px solid ${m.color}55`, color: m.color, fontSize: 12, fontWeight: 900, borderRadius: 5, padding: '2px 8px' }}>{m.rate}</div>
+                    </div>
+
+                    <div style={{ padding: '10px 13px', background: '#0d111a', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {/* Why it works */}
+                      <div>
+                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Why it works</div>
+                        <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, lineHeight: 1.5 }}>{t.why}</div>
+                      </div>
+
+                      {/* Steps */}
+                      <div>
+                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>The steps</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {t.steps.map((step, i) => (
+                            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                              <span style={{ color: m.color, fontSize: 10, fontWeight: 900, minWidth: 16, marginTop: 1 }}>{i + 1}.</span>
+                              <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>{step}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Worked examples */}
+                      <div>
+                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Worked examples</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {t.examples.map((ex, ei) => (
+                            <div key={ei} style={{ background: 'rgba(0,0,0,0.35)', borderRadius: 8, padding: '8px 10px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                              <div style={{ color: '#e8c86a', fontSize: 12, fontWeight: 900, marginBottom: 5 }}>Bet: ${ex.bet}</div>
+                              {ex.steps.map((s, si) => (
+                                <div key={si} style={{ color: si === ex.steps.length - 1 ? '#4ade80' : 'rgba(255,255,255,0.5)', fontSize: 11, lineHeight: 1.6, fontWeight: si === ex.steps.length - 1 ? 900 : 400 }}>
+                                  {si === ex.steps.length - 1 ? '→ ' : '   '}{s}
+                                </div>
+                              ))}
+                              <div style={{ color: m.color, fontSize: 13, fontWeight: 900, marginTop: 4 }}>Profit: +${ex.result.toLocaleString()}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Memory tip */}
+                      <div style={{ background: `${m.color}0c`, border: `1px solid ${m.color}25`, borderRadius: 7, padding: '7px 10px' }}>
+                        <span style={{ color: m.color, fontSize: 10, fontWeight: 900 }}>💡 Memory tip: </span>
+                        <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>{t.memoryTip}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Mixed bet tip */}
+              <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', fontSize: 10, lineHeight: 1.7 }}>
+                <span style={{ color: '#e8c86a', fontWeight: 700 }}>Mixed bets:</span> Always split by denomination.
+                Example — $35 Dragon 7 = $25 chip + $10 chip.
+                $25×40 = $1,000 · $10×40 = $400 · Total = <span style={{ color: '#4ade80', fontWeight: 700 }}>$1,400</span>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface Stats { correct: number; total: number; streak: number; bestStreak: number; }
 type ZoneStats = Record<Zone, { correct: number; total: number }>;
 const emptyStats = (): Stats => ({ correct: 0, total: 0, streak: 0, bestStreak: 0 });
@@ -488,64 +733,8 @@ export default function BonusMathDrill() {
         </div>
       </div>
 
-      {/* Reference modal */}
-      {showRef && (
-        <div onClick={() => setShowRef(false)} style={{
-          position: 'fixed', inset: 0, zIndex: 50,
-          background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        }}>
-          <div onClick={e => e.stopPropagation()} style={{
-            background: '#111720', borderRadius: '20px 20px 0 0',
-            border: '2px solid rgba(232,200,106,0.25)', borderBottom: 'none',
-            width: '100%', maxWidth: 500,
-            padding: '20px 16px 32px',
-            maxHeight: '88dvh', overflowY: 'auto',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ color: '#e8c86a', fontSize: 13, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                Bonus Rate Reference
-              </div>
-              <button onClick={() => setShowRef(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>✕</button>
-            </div>
-
-            {ZONES.map(z => {
-              const m = ZONE_META[z];
-              const zs = zoneStats[z];
-              const zpct = zs.total > 0 ? Math.round((zs.correct / zs.total) * 100) : null;
-              return (
-                <div key={z} style={{
-                  marginBottom: 10, borderRadius: 12, padding: '11px 13px',
-                  background: `${m.color}0e`, border: `1.5px solid ${m.color}30`,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <div style={{ color: m.color, fontSize: 14, fontWeight: 900 }}>{m.label}</div>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                      {zpct !== null && (
-                        <span style={{ color: zpct >= 90 ? '#4ade80' : zpct >= 70 ? '#fbbf24' : '#f87171', fontSize: 10, fontWeight: 900 }}>
-                          {zpct}% ({zs.total})
-                        </span>
-                      )}
-                      <span style={{ background: `${m.color}22`, border: `1px solid ${m.color}55`, color: m.color, fontSize: 11, fontWeight: 900, borderRadius: 5, padding: '2px 7px' }}>{m.rate}</span>
-                    </div>
-                  </div>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginBottom: 5 }}>{m.trigger}</div>
-                  <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '5px 9px' }}>
-                    <div style={{ color: m.color, fontSize: 12, fontWeight: 900 }}>⚡ {m.shortcut}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, marginTop: 2, fontStyle: 'italic' }}>{m.shortcutDetail}</div>
-                  </div>
-                </div>
-              );
-            })}
-
-            <div style={{ marginTop: 6, padding: '9px 11px', borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)', fontSize: 10, lineHeight: 1.6 }}>
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>Tip:</span> Profit = side bet × rate. The original bet is also returned to the player.
-              <br />
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>Blind mode</span> hides the shortcut so you practice from memory.
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Reference / Teaching modal */}
+      {showRef && <TeachModal onClose={() => setShowRef(false)} zoneStats={zoneStats} />}
     </div>
   );
 }
