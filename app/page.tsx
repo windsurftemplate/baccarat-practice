@@ -374,19 +374,22 @@ export default function LandingPage() {
             <Link key={d.href} href={d.href} style={{
               textDecoration: 'none',
               display: 'flex', alignItems: 'center', gap: 10,
-              background: `linear-gradient(135deg, ${d.color}25 0%, ${d.color}08 100%)`,
-              border: `1px solid ${d.border}`,
-              borderRadius: 10, padding: '11px 12px',
+              background: 'linear-gradient(135deg, rgba(200,164,74,0.07) 0%, rgba(0,0,0,0.3) 100%)',
+              border: '1px solid rgba(200,164,74,0.18)',
+              borderRadius: 10, padding: '12px 12px',
               cursor: 'pointer', touchAction: 'manipulation',
               WebkitTapHighlightColor: 'transparent',
               position: 'relative', overflow: 'hidden',
             }}>
-              {/* Subtle right edge fade */}
-              <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 28, background: `linear-gradient(90deg, transparent, ${d.color}18)` }} />
+              {/* Left gold accent bar */}
+              <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 2, background: 'linear-gradient(180deg, transparent, rgba(200,164,74,0.5), transparent)' }} />
+              {/* Right fade */}
+              <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 24, background: 'linear-gradient(90deg, transparent, rgba(200,164,74,0.04))' }} />
               <span style={{ fontSize: 22, flexShrink: 0 }}>{d.icon}</span>
-              <span style={{ color: 'rgba(255,255,255,0.82)', fontSize: 11, fontWeight: 700, lineHeight: 1.3, position: 'relative', zIndex: 1 }}>
-                {d.title}
-              </span>
+              <div style={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
+                <div style={{ color: 'rgba(232,200,106,0.9)', fontSize: 11, fontWeight: 800, lineHeight: 1.3 }}>{d.title}</div>
+              </div>
+              <span style={{ color: 'rgba(200,164,74,0.4)', fontSize: 14, flexShrink: 0 }}>›</span>
             </Link>
           ))}
         </div>
