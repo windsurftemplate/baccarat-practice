@@ -354,7 +354,7 @@ export default function LandingPage() {
         {/* Footer */}
         <div style={{ marginTop: 18, textAlign: 'center', borderTop: '1px solid rgba(200,164,74,0.08)', paddingTop: 14 }}>
           <div style={{ color: 'rgba(200,164,74,0.3)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase' }}>
-            ♦ Punto Banco · Baccarat Practice ♦
+            ♦ Baccarat Practice ♦
           </div>
           <div style={{ color: 'rgba(255,255,255,0.1)', fontSize: 8, letterSpacing: '0.1em', marginTop: 4 }}>
             Est. 2024 · For Training Purposes Only
