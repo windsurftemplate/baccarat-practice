@@ -1,12 +1,12 @@
 'use client';
 import { useReducer } from 'react';
-import { GameState, Action } from '../lib/types';
+import { GameState, Action } from '../../lib/types';
 import {
   EMPTY_BETS, createShoe, makePlayer,
   dealInitial, drawCard, determineOutcome, buildPlayerResult,
   autoGenerateBets, totalBetAmount,
-} from '../lib/baccarat';
-import BaccaratTable from '../components/BaccaratTable';
+} from '../../lib/baccarat';
+import BaccaratTable from '../../components/BaccaratTable';
 
 const firstPlayer = makePlayer({ name: 'Player 1' });
 
