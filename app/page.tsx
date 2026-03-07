@@ -39,30 +39,49 @@ function FloatingCard({
 }
 
 // ─── Casino chip ──────────────────────────────────────────────────────────────
+// Colors match real baccarat table: $1=green  $5=red  $20=light-blue  $100=purple
 
-const CHIP_CFG: Record<number, { bg: string; rim: string }> = {
-  5:    { bg: '#991b1b', rim: '#ef4444' },
-  25:   { bg: '#14532d', rim: '#22c55e' },
-  100:  { bg: '#1e3a5f', rim: '#60a5fa' },
-  500:  { bg: '#4c1d95', rim: '#a78bfa' },
-  1000: { bg: '#78350f', rim: '#f59e0b' },
+const CHIP_CFG: Record<number, { face: string; highlight: string; shadow: string; rim: string }> = {
+  1:   { face: '#166534', highlight: '#4ade80', shadow: '#052e16', rim: '#15803d' },
+  5:   { face: '#991b1b', highlight: '#f87171', shadow: '#450a0a', rim: '#dc2626' },
+  20:  { face: '#1e4d7b', highlight: '#93c5fd', shadow: '#0c2340', rim: '#3b82f6' },
+  100: { face: '#5b21b6', highlight: '#c4b5fd', shadow: '#2e1065', rim: '#7c3aed' },
 };
 
 function Chip({ value, size = 52, style }: { value: number; size?: number; style?: React.CSSProperties }) {
-  const c = CHIP_CFG[value] || CHIP_CFG[25];
-  const inset = size > 44 ? 6 : 4;
+  const c = CHIP_CFG[value] ?? CHIP_CFG[5];
+  const bw = Math.max(3, Math.round(size * 0.075)); // border width
+  const inset = Math.max(4, Math.round(size * 0.12));
+  const dashW = Math.max(1.5, size * 0.03);
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      background: `radial-gradient(circle at 32% 28%, ${c.rim}99, ${c.bg})`,
-      border: `${size > 44 ? 4 : 3}px solid ${c.rim}`,
-      boxShadow: `0 4px 18px rgba(0,0,0,0.75), 0 0 0 1px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2)`,
+      // 3-tone radial: bright highlight top-left → mid face → dark bottom-right
+      background: `radial-gradient(ellipse at 30% 25%, ${c.highlight} 0%, ${c.face} 42%, ${c.shadow} 100%)`,
+      border: `${bw}px solid ${c.rim}`,
+      boxShadow: [
+        // bottom edge slabs — simulate physical thickness
+        `0 ${Math.round(size * 0.06)}px 0 ${c.shadow}`,
+        `0 ${Math.round(size * 0.1)}px 0 rgba(0,0,0,0.45)`,
+        // ambient drop shadow
+        `0 ${Math.round(size * 0.18)}px ${Math.round(size * 0.35)}px rgba(0,0,0,0.75)`,
+        // inner top specular
+        `inset 0 2px 5px rgba(255,255,255,0.45)`,
+        // inner bottom shadow for depth
+        `inset 0 -3px 5px rgba(0,0,0,0.45)`,
+      ].join(', '),
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       position: 'relative', flexShrink: 0,
       ...style,
     }}>
-      <div style={{ position: 'absolute', inset, borderRadius: '50%', border: '2px dashed rgba(255,255,255,0.3)' }} />
-      <span style={{ color: '#fff', fontSize: size > 44 ? 11 : 9, fontWeight: 900, fontFamily: 'Georgia, serif', position: 'relative', zIndex: 1 }}>
+      {/* Dashed inner ring */}
+      <div style={{ position: 'absolute', inset, borderRadius: '50%', border: `${dashW}px dashed rgba(255,255,255,0.38)` }} />
+      <span style={{
+        color: '#fff', fontSize: size > 44 ? 11 : size > 30 ? 9 : 8,
+        fontWeight: 900, fontFamily: 'Georgia, serif',
+        position: 'relative', zIndex: 1,
+        textShadow: '0 1px 3px rgba(0,0,0,0.7)',
+      }}>
         ${value}
       </span>
     </div>
@@ -133,20 +152,22 @@ export default function LandingPage() {
           background: 'linear-gradient(90deg, transparent 0%, rgba(200,164,74,0.3) 20%, rgba(200,164,74,0.7) 50%, rgba(200,164,74,0.3) 80%, transparent 100%)',
         }} />
 
-        {/* Dragon (left) and Panda (right) — baccarat bonus mascots */}
+        {/* Dragon (left) and Panda (right) — full-height background mascots */}
         <div style={{
-          position: 'absolute', left: '-2%', top: '50%',
-          transform: 'translateY(-54%) scaleX(-1)',
-          fontSize: 148, lineHeight: 1,
-          opacity: 0.13, pointerEvents: 'none', userSelect: 'none',
-          filter: 'drop-shadow(0 0 24px rgba(34,197,94,0.4))',
+          position: 'absolute', left: 0, top: 0, bottom: 0,
+          display: 'flex', alignItems: 'center',
+          fontSize: 'min(55vw, 340px)', lineHeight: 1,
+          opacity: 0.12, pointerEvents: 'none', userSelect: 'none',
+          filter: 'drop-shadow(0 0 32px rgba(34,197,94,0.35))',
+          transform: 'scaleX(-1) translateX(12%)',
         }}>🐉</div>
         <div style={{
-          position: 'absolute', right: '-2%', top: '50%',
-          transform: 'translateY(-46%)',
-          fontSize: 130, lineHeight: 1,
-          opacity: 0.13, pointerEvents: 'none', userSelect: 'none',
-          filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))',
+          position: 'absolute', right: 0, top: 0, bottom: 0,
+          display: 'flex', alignItems: 'center',
+          fontSize: 'min(48vw, 300px)', lineHeight: 1,
+          opacity: 0.11, pointerEvents: 'none', userSelect: 'none',
+          filter: 'drop-shadow(0 0 28px rgba(255,255,255,0.25))',
+          transform: 'translateX(14%)',
         }}>🐼</div>
 
         {/* Large faded suit symbols in corners */}
@@ -205,12 +226,12 @@ export default function LandingPage() {
         <FloatingCard rank="7" suit="diamonds" className="landing-card-g" style={{ bottom: '30%', right: '2%', opacity: 0.3,  zIndex: 0 }} />
 
         {/* Left chip tower */}
-        <ChipTower values={[5, 25, 5, 100, 25, 5, 25]} style={{ position: 'absolute', left: '3%', bottom: '20%', opacity: 0.65, zIndex: 0 }} />
+        <ChipTower values={[5, 1, 5, 20, 5, 1, 20]} style={{ position: 'absolute', left: '3%', bottom: '20%', opacity: 0.65, zIndex: 0 }} />
         {/* Right chip tower */}
-        <ChipTower values={[100, 25, 100, 500, 25, 100]} style={{ position: 'absolute', right: '3%', bottom: '22%', opacity: 0.6, zIndex: 0 }} />
+        <ChipTower values={[100, 20, 100, 20, 5, 100]} style={{ position: 'absolute', right: '3%', bottom: '22%', opacity: 0.6, zIndex: 0 }} />
 
         {/* ── Central content ── */}
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 320 }}>
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: 'min(92vw, 340px)' }}>
 
           {/* Top ribbon */}
           <div style={{ animation: 'fadeInDown 0.5s ease both' }}>
@@ -246,8 +267,8 @@ export default function LandingPage() {
               <div key={i} style={{ position: 'absolute', width: 14, height: 14, ...s }} />
             ))}
 
-            <h1 style={{ margin: 0, lineHeight: 1 }}>
-              <span className="shimmer-gold" style={{ fontSize: 46, fontWeight: 900, letterSpacing: '0.06em', display: 'block' }}>
+            <h1 style={{ margin: 0, lineHeight: 1, overflow: 'visible' }}>
+              <span className="shimmer-gold" style={{ fontSize: 'min(13vw, 46px)', fontWeight: 900, letterSpacing: '0.05em', display: 'block', whiteSpace: 'nowrap' }}>
                 BACCARAT
               </span>
             </h1>
@@ -325,7 +346,7 @@ export default function LandingPage() {
 
         {/* Chip row decoration */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: -6, marginTop: 22, opacity: 0.4 }}>
-          {[5, 25, 100, 500, 25, 5].map((v, i) => (
+          {[1, 5, 20, 100, 5, 1].map((v, i) => (
             <Chip key={i} value={v} size={36} style={{ marginLeft: i === 0 ? 0 : -10, transform: `rotate(${(i - 2.5) * 5}deg)` }} />
           ))}
         </div>
