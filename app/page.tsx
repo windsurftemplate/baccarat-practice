@@ -1,197 +1,208 @@
 'use client';
-import { useReducer } from 'react';
-import { GameState, Action } from '../lib/types';
-import {
-  EMPTY_BETS, createShoe, makePlayer,
-  dealInitial, drawCard, determineOutcome, buildPlayerResult,
-  autoGenerateBets, totalBetAmount,
-} from '../lib/baccarat';
-import BaccaratTable from '../components/BaccaratTable';
+import Link from 'next/link';
 
-const firstPlayer = makePlayer({ name: 'Player 1' });
+// ─── Floating card component ──────────────────────────────────────────────────
 
-const initialState: GameState = {
-  phase: 'betting',
-  shoe: createShoe(),
-  playerHand: [],
-  bankerHand: [],
-  players: [firstPlayer],
-  activePlayerId: firstPlayer.id,
-  selectedChip: 25,
-  result: null,
-  history: [],
+const SUITS: Record<string, { symbol: string; color: string }> = {
+  spades:   { symbol: '♠', color: '#1a1a2e' },
+  hearts:   { symbol: '♥', color: '#c0392b' },
+  diamonds: { symbol: '♦', color: '#c0392b' },
+  clubs:    { symbol: '♣', color: '#1a1a2e' },
 };
 
-function reducer(state: GameState, action: Action): GameState {
-  switch (action.type) {
-
-    case 'SELECT_CHIP':
-      return { ...state, selectedChip: action.chip };
-
-    case 'SELECT_PLAYER':
-      return { ...state, activePlayerId: action.id };
-
-    case 'PLACE_BET': {
-      if (state.phase !== 'betting') return state;
-      const player = state.players.find(p => p.id === action.playerId);
-      if (!player) return state;
-      const newAmount = player.bets[action.zone] + state.selectedChip;
-      const newTotal = totalBetAmount({ ...player.bets, [action.zone]: newAmount });
-      if (newTotal > player.balance) return state;
-      return {
-        ...state,
-        players: state.players.map(p =>
-          p.id === action.playerId
-            ? { ...p, bets: { ...p.bets, [action.zone]: newAmount } }
-            : p
-        ),
-      };
-    }
-
-    case 'CLEAR_PLAYER_BETS':
-      return {
-        ...state,
-        players: state.players.map(p =>
-          p.id === action.id ? { ...p, bets: { ...EMPTY_BETS } } : p
-        ),
-      };
-
-    case 'AUTOBET': {
-      const player = state.players.find(p => p.id === action.id);
-      if (!player) return state;
-      return {
-        ...state,
-        players: state.players.map(p =>
-          p.id === action.id ? { ...p, bets: autoGenerateBets(p.balance) } : p
-        ),
-      };
-    }
-
-    case 'ADD_PLAYER': {
-      if (state.players.length >= 6) return state;
-      const newPlayer = makePlayer();
-      return {
-        ...state,
-        players: [...state.players, newPlayer],
-        activePlayerId: newPlayer.id,
-      };
-    }
-
-    case 'REMOVE_PLAYER': {
-      if (state.players.length <= 1) return state;
-      const remaining = state.players.filter(p => p.id !== action.id);
-      const newActive = state.activePlayerId === action.id ? remaining[0].id : state.activePlayerId;
-      return { ...state, players: remaining, activePlayerId: newActive };
-    }
-
-    case 'DEAL': {
-      if (state.phase !== 'betting') return state;
-      const hasBets = state.players.some(p => totalBetAmount(p.bets) > 0);
-      if (!hasBets) return state;
-
-      let shoe = state.shoe;
-      if (shoe.length < 52) shoe = createShoe();
-
-      const { playerHand, bankerHand, remainingShoe } = dealInitial(shoe);
-      const pTotal = playerHand.reduce((s, c) => s + c.value, 0) % 10;
-      const bTotal = bankerHand.reduce((s, c) => s + c.value, 0) % 10;
-
-      // Natural: skip hit/stand decisions
-      if (pTotal >= 8 || bTotal >= 8) {
-        return finishRound({ ...state, shoe: remainingShoe }, playerHand, bankerHand, remainingShoe);
-      }
-
-      return {
-        ...state,
-        phase: 'player-turn',
-        shoe: remainingShoe,
-        playerHand,
-        bankerHand,
-      };
-    }
-
-    case 'PLAYER_HIT': {
-      if (state.phase !== 'player-turn') return state;
-      const { card, remainingShoe } = drawCard(state.shoe);
-      return { ...state, phase: 'banker-turn', shoe: remainingShoe, playerHand: [...state.playerHand, card] };
-    }
-
-    case 'PLAYER_STAND':
-      if (state.phase !== 'player-turn') return state;
-      return { ...state, phase: 'banker-turn' };
-
-    case 'BANKER_HIT': {
-      if (state.phase !== 'banker-turn') return state;
-      const { card, remainingShoe } = drawCard(state.shoe);
-      return finishRound(state, state.playerHand, [...state.bankerHand, card], remainingShoe);
-    }
-
-    case 'BANKER_STAND':
-      if (state.phase !== 'banker-turn') return state;
-      return finishRound(state, state.playerHand, state.bankerHand, state.shoe);
-
-    case 'NEXT_ROUND':
-      return {
-        ...state,
-        phase: 'betting',
-        playerHand: [],
-        bankerHand: [],
-        players: state.players.map(p => ({ ...p, bets: { ...EMPTY_BETS } })),
-        result: null,
-      };
-
-    case 'SET_BALANCE':
-      return {
-        ...state,
-        players: state.players.map(p =>
-          p.id === action.id ? { ...p, balance: action.balance } : p
-        ),
-      };
-
-    case 'REBET': {
-      if (state.phase !== 'betting' || !state.result) return state;
-      return {
-        ...state,
-        players: state.players.map(p => {
-          const lastBets = state.result!.playerResults.find(r => r.playerId === p.id)?.betsPlaced;
-          if (!lastBets) return p;
-          return totalBetAmount(lastBets) <= p.balance ? { ...p, bets: { ...lastBets } } : p;
-        }),
-      };
-    }
-
-    default:
-      return state;
-  }
+function FloatingCard({
+  rank, suit, className, style,
+}: {
+  rank: string; suit: keyof typeof SUITS; className: string; style?: React.CSSProperties;
+}) {
+  const s = SUITS[suit];
+  return (
+    <div className={className} style={{
+      position: 'absolute',
+      width: 62, height: 86,
+      background: 'linear-gradient(160deg, #fff 0%, #f0ece4 100%)',
+      borderRadius: 10,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.5)',
+      padding: '5px 6px',
+      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+      border: '1px solid rgba(255,255,255,0.9)',
+      ...style,
+    }}>
+      <div style={{ color: s.color, fontSize: 13, fontWeight: 900, lineHeight: 1, fontFamily: 'Georgia, serif' }}>
+        {rank}<br />
+        <span style={{ fontSize: 14 }}>{s.symbol}</span>
+      </div>
+      <div style={{ color: s.color, fontSize: 13, fontWeight: 900, lineHeight: 1, fontFamily: 'Georgia, serif', textAlign: 'right', transform: 'rotate(180deg)' }}>
+        {rank}<br />
+        <span style={{ fontSize: 14 }}>{s.symbol}</span>
+      </div>
+    </div>
+  );
 }
 
-function finishRound(
-  state: GameState,
-  playerHand: GameState['playerHand'],
-  bankerHand: GameState['bankerHand'],
-  shoe: GameState['shoe'],
-): GameState {
-  const outcome = determineOutcome(playerHand, bankerHand);
-  const playerResults = state.players
-    .filter(p => totalBetAmount(p.bets) > 0)
-    .map(p => buildPlayerResult(p, outcome));
-  const result = { playerHand, bankerHand, outcome, playerResults };
-  return {
-    ...state,
-    phase: 'result',
-    shoe,
-    playerHand,
-    bankerHand,
-    players: state.players.map(p => {
-      const pr = playerResults.find(r => r.playerId === p.id);
-      return pr ? { ...p, balance: p.balance + pr.netChange } : p;
-    }),
-    result,
-    history: [...state.history, result],
-  };
+// ─── Decorative chip ─────────────────────────────────────────────────────────
+
+function DecorativeChip({ value, color, rim, style }: { value: number; color: string; rim: string; style?: React.CSSProperties }) {
+  return (
+    <div style={{
+      width: 56, height: 56, borderRadius: '50%',
+      background: `radial-gradient(circle at 35% 35%, ${rim}, ${color})`,
+      border: `4px solid ${rim}`,
+      boxShadow: `0 6px 20px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.3)`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', flexShrink: 0,
+      ...style,
+    }}>
+      <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: '2px dashed rgba(255,255,255,0.4)' }} />
+      <span style={{ color: '#fff', fontSize: 11, fontWeight: 900, fontFamily: 'Georgia, serif', position: 'relative', zIndex: 1 }}>${value}</span>
+    </div>
+  );
 }
 
-export default function Page() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  return <BaccaratTable state={state} dispatch={dispatch} />;
+// ─── Drill cards ─────────────────────────────────────────────────────────────
+
+const DRILLS = [
+  { href: '/practice/third-card', icon: '🃏', title: 'Third Card Rules',   color: '#7a1826', border: 'rgba(248,113,113,0.35)' },
+  { href: '/practice/naturals',   icon: '⚡', title: 'Natural Recognition', color: '#1d4ed8', border: 'rgba(147,197,253,0.35)' },
+  { href: '/practice/totals',     icon: '🔢', title: 'Hand Totals',         color: '#7c3aed', border: 'rgba(196,181,253,0.35)' },
+  { href: '/practice/chips',      icon: '🪙', title: 'Chip Count',          color: '#15803d', border: 'rgba(74,222,128,0.35)' },
+  { href: '/practice/payouts',    icon: '💰', title: 'Payout Calculator',   color: '#b45309', border: 'rgba(252,211,77,0.35)' },
+  { href: '/practice/bonus-math', icon: '🧮', title: 'Bonus Math',          color: '#7c3aed', border: 'rgba(196,181,253,0.35)' },
+];
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
+export default function LandingPage() {
+  return (
+    <div style={{
+      background: '#080c10',
+      height: '100dvh',
+      overflowY: 'auto',
+      fontFamily: 'Georgia, serif',
+      WebkitOverflowScrolling: 'touch',
+    }}>
+
+      {/* ── Hero ── */}
+      <div style={{
+        position: 'relative',
+        overflow: 'hidden',
+        minHeight: '56dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '48px 24px 36px',
+        background: `
+          radial-gradient(ellipse at 50% 0%,   rgba(122,24,38,0.4) 0%, transparent 60%),
+          radial-gradient(ellipse at 20% 80%,  rgba(122,24,38,0.15) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 80%,  rgba(29,78,216,0.1) 0%, transparent 50%),
+          linear-gradient(180deg, #0d0d18 0%, #080c10 100%)
+        `,
+      }}>
+        {/* Subtle felt texture overlay */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px)',
+        }} />
+
+        {/* Floating cards — background decoration */}
+        <FloatingCard rank="A" suit="spades"   className="landing-card-a" style={{ top: '8%',  left: '4%',  opacity: 0.75, zIndex: 0 }} />
+        <FloatingCard rank="K" suit="hearts"   className="landing-card-b" style={{ top: '5%',  right: '6%', opacity: 0.7,  zIndex: 0 }} />
+        <FloatingCard rank="7" suit="diamonds" className="landing-card-c" style={{ bottom: '10%', left: '8%',  opacity: 0.6,  zIndex: 0 }} />
+        <FloatingCard rank="8" suit="clubs"    className="landing-card-d" style={{ bottom: '12%', right: '5%', opacity: 0.65, zIndex: 0 }} />
+        <FloatingCard rank="Q" suit="hearts"   className="landing-card-e" style={{ top: '30%', right: '1%', opacity: 0.4,  zIndex: 0 }} />
+
+        {/* Decorative chips */}
+        <div style={{ position: 'absolute', bottom: '8%', left: '2%', display: 'flex', gap: -8, opacity: 0.55 }}>
+          <DecorativeChip value={25} color="#1a7a3a" rim="#27ae60" style={{ transform: 'rotate(-8deg)' }} />
+          <DecorativeChip value={100} color="#1f2937" rim="#4b5563" style={{ marginLeft: -12, transform: 'rotate(4deg)' }} />
+        </div>
+
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 380 }}>
+          {/* Gold diamond decorators */}
+          <div style={{ color: 'rgba(200,164,74,0.5)', fontSize: 13, letterSpacing: '0.3em', marginBottom: 12, animation: 'fadeInDown 0.6s ease both' }}>
+            ♦ ♦ ♦
+          </div>
+
+          <h1 style={{ margin: 0, lineHeight: 1.1, animation: 'fadeInUp 0.5s ease 0.1s both' }}>
+            <span className="shimmer-gold" style={{ fontSize: 42, fontWeight: 900, letterSpacing: '0.08em', display: 'block' }}>
+              BACCARAT
+            </span>
+            <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.55)', display: 'block', marginTop: 4 }}>
+              PRACTICE
+            </span>
+          </h1>
+
+          <p style={{
+            color: 'rgba(255,255,255,0.45)', fontSize: 13, marginTop: 14, lineHeight: 1.6,
+            letterSpacing: '0.04em', animation: 'fadeInUp 0.5s ease 0.2s both',
+          }}>
+            Train like a dealer.<br />Think like a pro.
+          </p>
+
+          {/* CTA buttons */}
+          <div style={{ display: 'flex', gap: 10, marginTop: 28, justifyContent: 'center', animation: 'fadeInUp 0.5s ease 0.3s both' }}>
+            <Link href="/practice" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              flex: 1, maxWidth: 160, height: 52, borderRadius: 14,
+              background: 'linear-gradient(160deg, #7a1826, #a52035)',
+              color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '0.06em',
+              textDecoration: 'none', textTransform: 'uppercase',
+              border: '1px solid rgba(200,80,100,0.5)',
+            }} className="glow-btn-red">
+              📚 Drills
+            </Link>
+            <Link href="/table" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              flex: 1, maxWidth: 160, height: 52, borderRadius: 14,
+              background: 'linear-gradient(160deg, #7a5820, #9a7030)',
+              color: '#fef3c7', fontSize: 14, fontWeight: 900, letterSpacing: '0.06em',
+              textDecoration: 'none', textTransform: 'uppercase',
+              border: '1px solid rgba(200,164,74,0.5)',
+            }} className="glow-btn-gold">
+              🃏 Table
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Drills grid ── */}
+      <div style={{ padding: '24px 16px 40px', animation: 'fadeInUp 0.6s ease 0.4s both' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16,
+          paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.07)',
+        }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(200,164,74,0.2)' }} />
+          <span style={{ color: 'rgba(200,164,74,0.7)', fontSize: 10, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+            Practice Drills
+          </span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(200,164,74,0.2)' }} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {DRILLS.map(d => (
+            <Link key={d.href} href={d.href} style={{
+              textDecoration: 'none',
+              display: 'flex', alignItems: 'center', gap: 10,
+              background: `linear-gradient(135deg, ${d.color}1a 0%, rgba(0,0,0,0) 70%)`,
+              border: `1px solid ${d.border}`,
+              borderRadius: 12, padding: '12px 12px',
+              cursor: 'pointer', touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'opacity 0.15s',
+            }}>
+              <span style={{ fontSize: 24, flexShrink: 0 }}>{d.icon}</span>
+              <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: 700, lineHeight: 1.3 }}>{d.title}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: 28, textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: 10, letterSpacing: '0.08em' }}>
+          ♦ PUNTO BANCO · BACCARAT PRACTICE ♦
+        </div>
+      </div>
+    </div>
+  );
 }

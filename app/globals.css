@@ -193,3 +193,79 @@ body {
 }
 .main-zone:hover  { background: rgba(0,0,0,0.1); }
 .main-zone:active { background: rgba(0,0,0,0.18); }
+
+/* ─── Landing page animations ─────────────────────────────────────── */
+
+@keyframes floatA {
+  0%, 100% { transform: translateY(0px) rotate(-12deg); }
+  50%       { transform: translateY(-18px) rotate(-10deg); }
+}
+@keyframes floatB {
+  0%, 100% { transform: translateY(0px) rotate(8deg); }
+  50%       { transform: translateY(-14px) rotate(10deg); }
+}
+@keyframes floatC {
+  0%, 100% { transform: translateY(-6px) rotate(-5deg); }
+  50%       { transform: translateY(10px) rotate(-7deg); }
+}
+@keyframes floatD {
+  0%, 100% { transform: translateY(4px) rotate(14deg); }
+  50%       { transform: translateY(-12px) rotate(12deg); }
+}
+@keyframes floatE {
+  0%, 100% { transform: translateY(-2px) rotate(-18deg); }
+  50%       { transform: translateY(14px) rotate(-16deg); }
+}
+
+@keyframes shimmerGold {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(122,24,38,0.5), 0 4px 20px rgba(0,0,0,0.5); }
+  50%       { box-shadow: 0 0 40px rgba(165,32,53,0.75), 0 4px 30px rgba(0,0,0,0.5); }
+}
+
+@keyframes glowPulseGold {
+  0%, 100% { box-shadow: 0 0 16px rgba(200,164,74,0.35), 0 4px 16px rgba(0,0,0,0.5); }
+  50%       { box-shadow: 0 0 32px rgba(232,200,106,0.6), 0 4px 24px rgba(0,0,0,0.5); }
+}
+
+@keyframes chipSpin {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+
+@keyframes rotateSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.landing-card-a { animation: floatA 4.1s ease-in-out infinite; }
+.landing-card-b { animation: floatB 3.7s ease-in-out infinite; }
+.landing-card-c { animation: floatC 4.5s ease-in-out infinite 0.5s; }
+.landing-card-d { animation: floatD 3.9s ease-in-out infinite 1s; }
+.landing-card-e { animation: floatE 4.8s ease-in-out infinite 0.3s; }
+
+.shimmer-gold {
+  background: linear-gradient(90deg, #c8a44a 0%, #fff8dc 40%, #e8c86a 60%, #c8a44a 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmerGold 3s linear infinite;
+}
+
+.glow-btn-red  { animation: glowPulse 2.2s ease-in-out infinite; }
+.glow-btn-gold { animation: glowPulseGold 2.5s ease-in-out infinite; }

@@ -78,7 +78,7 @@ export default function PracticeHub() {
       <div className="flex items-center justify-between px-4 py-2"
         style={{ background: 'rgba(0,0,0,0.65)', borderBottom: '2px solid #7a1826' }}>
         <Link href="/" className="text-xs font-bold tracking-widest uppercase"
-          style={{ color: 'rgba(232,200,106,0.6)' }}>← Table</Link>
+          style={{ color: 'rgba(232,200,106,0.6)' }}>← Home</Link>
         <div className="text-xs font-bold tracking-widest uppercase" style={{ color: '#e8c86a', letterSpacing: '0.2em' }}>
           ♦ Practice Drills ♦
         </div>
