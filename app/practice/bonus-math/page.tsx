@@ -8,23 +8,69 @@ type Zone = 'dragon7' | 'panda8' | 'ruby_small' | 'ruby_big' | 'tie';
 const ZONES: Zone[] = ['dragon7', 'panda8', 'ruby_small', 'ruby_big', 'tie'];
 
 const ZONE_META: Record<Zone, {
-  label: string; short: string; color: string;
-  rate: string; multiple: number;
-  shortcut: string; shortcutDetail: string;
+  label: string; short: string; color: string; rate: string; multiple: number;
+  shortcut: string; shortcutDetail: string; trigger: string;
 }> = {
-  dragon7:    { label: 'Dragon 7',   short: 'D7',  color: '#a855f7', rate: '40:1', multiple: 40, shortcut: '×4, then add a zero',   shortcutDetail: '$25 × 40 → $25 × 4 = $100 → $1,000' },
-  panda8:     { label: 'Panda 8',    short: 'P8',  color: '#10b981', rate: '25:1', multiple: 25, shortcut: '×100 ÷ 4',              shortcutDetail: '$25 × 25 → $2,500 ÷ 4 = $625' },
-  ruby_small: { label: 'Small Ruby', short: 'SR',  color: '#f43f5e', rate: '10:1', multiple: 10, shortcut: 'Add a zero',             shortcutDetail: '$35 × 10 → $350' },
-  ruby_big:   { label: 'Big Ruby',   short: 'BR',  color: '#f97316', rate: '75:1', multiple: 75, shortcut: '×100 − ×25',            shortcutDetail: '$25 × 75 → $2,500 − $625 = $1,875' },
-  tie:        { label: 'Tie',        short: 'TIE', color: '#4ade80', rate: '9:1',  multiple: 9,  shortcut: '×10 − bet',             shortcutDetail: '$35 × 9 → $350 − $35 = $315' },
+  dragon7:    { label: 'Dragon 7',   short: 'D7',  color: '#a855f7', rate: '40:1', multiple: 40, shortcut: '×4, then add a zero',  shortcutDetail: '$25 × 4 = $100 → $1,000',          trigger: 'Banker 3-card total 7 wins' },
+  panda8:     { label: 'Panda 8',    short: 'P8',  color: '#10b981', rate: '25:1', multiple: 25, shortcut: '×100 ÷ 4',             shortcutDetail: '$100 × 25 → $10,000 ÷ 4 = $2,500', trigger: 'Player 3-card total 8 wins' },
+  ruby_small: { label: 'Small Ruby', short: 'SR',  color: '#f43f5e', rate: '10:1', multiple: 10, shortcut: 'Add a zero',            shortcutDetail: '$35 × 10 → $350',                  trigger: 'Either side: 3-card total 9' },
+  ruby_big:   { label: 'Big Ruby',   short: 'BR',  color: '#f97316', rate: '75:1', multiple: 75, shortcut: '×100 − ×25',           shortcutDetail: '$25×100=$2,500 − $25×25=$625=$1,875', trigger: 'Both sides 3-card 9 (Tie)' },
+  tie:        { label: 'Tie',        short: 'TIE', color: '#4ade80', rate: '9:1',  multiple: 9,  shortcut: '×10 − bet',            shortcutDetail: '$35×10=$350 − $35=$315',            trigger: 'Tie' },
 };
+
+// ─── Chip display ─────────────────────────────────────────────────────────────
+
+const CHIP_STYLE: Record<number, { bg: string; rim: string; text: string }> = {
+  5:   { bg: '#a12020', rim: '#c0392b', text: '#fff' },
+  10:  { bg: '#1a5fa8', rim: '#2980b9', text: '#fff' },
+  25:  { bg: '#1a7a3a', rim: '#27ae60', text: '#fff' },
+  50:  { bg: '#5b1e8a', rim: '#7c3aed', text: '#fff' },
+  100: { bg: '#1f2937', rim: '#4b5563', text: '#e8c86a' },
+};
+
+function betToChips(bet: number): number[] {
+  const chips: number[] = [];
+  let r = bet;
+  for (const d of [100, 50, 25, 10, 5]) {
+    while (r >= d) { chips.push(d); r -= d; }
+  }
+  return chips;
+}
+
+function ChipStack({ bet }: { bet: number }) {
+  const chips = betToChips(bet);
+  return (
+    <div style={{ display: 'flex', gap: 5, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+      {chips.map((v, i) => {
+        const s = CHIP_STYLE[v] ?? CHIP_STYLE[5];
+        return (
+          <div key={i} style={{
+            width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+            background: `radial-gradient(circle at 35% 35%, ${s.rim}, ${s.bg})`,
+            border: `3px solid ${s.rim}`,
+            boxShadow: '0 4px 10px rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative',
+          }}>
+            <div style={{ position: 'absolute', inset: 5, borderRadius: '50%', border: '1.5px dashed rgba(255,255,255,0.3)' }} />
+            <span style={{ color: s.text, fontSize: 10, fontWeight: 900, position: 'relative', zIndex: 1 }}>${v}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+type Difficulty = 'normal' | 'hard' | 'blind';
+type ZoneFilter = Zone | null;
+
 const CHIP_DENOMS = [5, 10, 25, 50, 100];
 
-function randomBet(): number {
-  const count = Math.random() < 0.45 ? 1 : 2;
+function randomBet(difficulty: Difficulty): number {
+  const maxChips = difficulty === 'hard' ? 4 : difficulty === 'blind' ? 3 : 2;
+  const count = 1 + Math.floor(Math.random() * maxChips);
   let total = 0;
   for (let i = 0; i < count; i++) {
     total += CHIP_DENOMS[Math.floor(Math.random() * CHIP_DENOMS.length)];
@@ -34,7 +80,6 @@ function randomBet(): number {
 
 function randomZone(): Zone { return ZONES[Math.floor(Math.random() * ZONES.length)]; }
 
-// Decompose bet into denomination groups for the breakdown panel
 interface DenomLine { denom: number; count: number; subtotal: number; pays: number }
 function decompose(bet: number, multiple: number): DenomLine[] {
   const lines: DenomLine[] = [];
@@ -54,15 +99,14 @@ function makeOptions(correct: number): number[] {
   const pool = new Set([correct]);
   const candidates = [
     Math.round(correct * 0.9), Math.round(correct * 1.1),
-    correct - correct % 50 === correct ? correct - 50 : correct + 50,
     Math.round(correct * 0.8), Math.round(correct * 1.2),
-    correct - 100, correct + 100,
+    correct - 100, correct + 100, correct - 50, correct + 50,
   ];
   for (const c of candidates) {
     if (pool.size >= 4) break;
     if (c > 0 && c !== correct) pool.add(c);
   }
-  const fallbacks = [correct * 2, Math.round(correct * 0.5), correct + 25, correct - 25, correct + 50];
+  const fallbacks = [correct * 2, Math.round(correct * 0.5), correct + 25, correct - 25];
   for (const v of fallbacks) {
     if (pool.size >= 4) break;
     if (v > 0 && v !== correct) pool.add(v);
@@ -77,31 +121,34 @@ function makeOptions(correct: number): number[] {
 }
 
 interface Stats { correct: number; total: number; streak: number; bestStreak: number; }
+type ZoneStats = Record<Zone, { correct: number; total: number }>;
 const emptyStats = (): Stats => ({ correct: 0, total: 0, streak: 0, bestStreak: 0 });
+const emptyZoneStats = (): ZoneStats => Object.fromEntries(ZONES.map(z => [z, { correct: 0, total: 0 }])) as ZoneStats;
 
 type Phase = 'question' | 'answered';
-type ZoneFilter = Zone | null;
-
 const TIMER_SECONDS = 5;
 
-function freshRound(zoneFilter: ZoneFilter) {
+function freshRound(zoneFilter: ZoneFilter, difficulty: Difficulty) {
   const zone = zoneFilter ?? randomZone();
-  const bet = randomBet();
-  const multiple = ZONE_META[zone].multiple;
-  return { zone, bet, options: makeOptions(bet * multiple) };
+  const bet = randomBet(difficulty);
+  return { zone, bet, options: makeOptions(bet * ZONE_META[zone].multiple) };
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function BonusMathDrill() {
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [zoneFilter, setZoneFilter] = useState<ZoneFilter>(null);
-  const [round, setRound] = useState(() => freshRound(null));
+  const [round, setRound] = useState(() => freshRound(null, 'normal'));
   const [phase, setPhase] = useState<Phase>('question');
   const [answer, setAnswer] = useState<{ selected: number; correct: boolean } | null>(null);
   const [stats, setStats] = useState<Stats>(emptyStats);
+  const [zoneStats, setZoneStats] = useState<ZoneStats>(emptyZoneStats);
   const [timed, setTimed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
+  const [showRef, setShowRef] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutFired = useRef(false);
 
   const { zone, bet, options } = round;
   const meta = ZONE_META[zone];
@@ -112,40 +159,27 @@ export default function BonusMathDrill() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
   }, []);
 
-  // Timer effect
   useEffect(() => {
     clearTimer();
     if (!timed || phase !== 'question') { setTimeLeft(TIMER_SECONDS); return; }
     setTimeLeft(TIMER_SECONDS);
     timerRef.current = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) { return TIMER_SECONDS; }
-        return t - 1;
-      });
+      setTimeLeft(t => (t <= 1 ? TIMER_SECONDS : t - 1));
     }, 1000);
     return clearTimer;
   }, [timed, phase, round, clearTimer]);
 
-  // Separate effect to handle timeout (avoids dispatch in state updater)
-  useEffect(() => {
-    if (timed && phase === 'question' && timeLeft === TIMER_SECONDS && timerRef.current) {
-      // just reset — actual timeout handled below
-    }
-  }, [timed, phase, timeLeft]);
-
-  // Watch for timer hitting 1 → dispatch timeout
-  const timeoutFired = useRef(false);
   useEffect(() => {
     if (!timed || phase !== 'question') { timeoutFired.current = false; return; }
     if (timeLeft <= 1 && !timeoutFired.current) {
       timeoutFired.current = true;
       clearTimer();
-      // Auto-submit wrong answer
       setAnswer({ selected: -1, correct: false });
       setPhase('answered');
-      setStats(s => ({ ...s, correct: s.correct, total: s.total + 1, streak: 0, bestStreak: s.bestStreak }));
+      setZoneStats(zs => ({ ...zs, [zone]: { correct: zs[zone].correct, total: zs[zone].total + 1 } }));
+      setStats(s => ({ ...s, total: s.total + 1, streak: 0 }));
     }
-  }, [timeLeft, timed, phase, clearTimer]);
+  }, [timeLeft, timed, phase, clearTimer, zone]);
 
   function handleAnswer(val: number) {
     if (phase !== 'question' || answer) return;
@@ -153,16 +187,17 @@ export default function BonusMathDrill() {
     const isCorrect = val === correct;
     setAnswer({ selected: val, correct: isCorrect });
     setPhase('answered');
+    setZoneStats(zs => ({ ...zs, [zone]: { correct: zs[zone].correct + (isCorrect ? 1 : 0), total: zs[zone].total + 1 } }));
     setStats(s => {
       const newStreak = isCorrect ? s.streak + 1 : 0;
       return { correct: s.correct + (isCorrect ? 1 : 0), total: s.total + 1, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak) };
     });
-    if (isCorrect) setTimeout(nextRound, 400);
+    if (isCorrect) setTimeout(nextRound, 1400);
   }
 
   function nextRound() {
     timeoutFired.current = false;
-    setRound(freshRound(zoneFilter));
+    setRound(freshRound(zoneFilter, difficulty));
     setAnswer(null);
     setPhase('question');
   }
@@ -170,13 +205,27 @@ export default function BonusMathDrill() {
   function selectFilter(z: ZoneFilter) {
     timeoutFired.current = false;
     setZoneFilter(z);
-    setRound(freshRound(z));
+    setRound(freshRound(z, difficulty));
     setAnswer(null);
     setPhase('question');
   }
 
+  function selectDifficulty(d: Difficulty) {
+    timeoutFired.current = false;
+    setDifficulty(d);
+    setRound(freshRound(zoneFilter, d));
+    setAnswer(null);
+    setPhase('question');
+  }
+
+  function resetAll() {
+    setStats(emptyStats());
+    setZoneStats(emptyZoneStats());
+  }
+
   const pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
   const isAnswered = phase === 'answered';
+  const showShortcut = difficulty !== 'blind';
 
   return (
     <div className="flex flex-col" style={{ background: '#0d0d16', height: '100dvh', fontFamily: 'Georgia, serif' }}>
@@ -190,27 +239,44 @@ export default function BonusMathDrill() {
         <div style={{ color: '#e8c86a', fontSize: 11, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
           🧮 Bonus Math
         </div>
-        <button
-          onClick={() => { setTimed(t => !t); setRound(freshRound(zoneFilter)); setAnswer(null); setPhase('question'); timeoutFired.current = false; }}
-          style={{
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={() => setShowRef(true)} style={{
+            background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4,
+            color: 'rgba(232,200,106,0.55)', fontSize: 15, padding: '2px 6px',
+            cursor: 'pointer', touchAction: 'manipulation', lineHeight: 1,
+          }}>ℹ</button>
+          <button onClick={() => { setTimed(t => !t); nextRound(); }} style={{
             fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase',
-            padding: '3px 8px', borderRadius: 5, cursor: 'pointer', touchAction: 'manipulation',
+            padding: '3px 7px', borderRadius: 4, cursor: 'pointer', touchAction: 'manipulation',
             background: timed ? 'rgba(251,191,36,0.2)' : 'none',
             border: timed ? '1px solid rgba(251,191,36,0.5)' : '1px solid rgba(255,255,255,0.1)',
             color: timed ? '#fbbf24' : 'rgba(255,255,255,0.3)',
-          }}
-        >
-          ⏱ Timed
-        </button>
+          }}>⏱</button>
+        </div>
+      </div>
+
+      {/* Difficulty tabs */}
+      <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.3)' }}>
+        {(['normal', 'hard', 'blind'] as Difficulty[]).map(d => (
+          <button key={d} onClick={() => selectDifficulty(d)} style={{
+            flex: 1, padding: '6px 4px', fontSize: 10, fontWeight: 800, letterSpacing: '0.06em',
+            textTransform: 'uppercase', cursor: 'pointer', touchAction: 'manipulation', border: 'none',
+            background: difficulty === d ? 'rgba(122,24,38,0.45)' : 'transparent',
+            color: difficulty === d ? '#f5f0e8' : 'rgba(255,255,255,0.3)',
+            borderBottom: difficulty === d ? '2px solid #f87171' : '2px solid transparent',
+          }}>
+            {d === 'normal' ? 'Normal' : d === 'hard' ? '💀 Hard' : '🙈 Blind'}
+          </button>
+        ))}
       </div>
 
       {/* Stats bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-around', padding: '5px 16px', background: 'rgba(0,0,0,0.35)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '5px 12px', background: 'rgba(0,0,0,0.35)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <StatPill label="Done" value={String(stats.total)} />
         <StatPill label="Accuracy" value={pct !== null ? `${pct}%` : '—'} color={pct === null ? undefined : pct >= 90 ? '#4ade80' : pct >= 70 ? '#fbbf24' : '#f87171'} />
         <StatPill label="Streak" value={String(stats.streak)} color="#fbbf24" />
         <StatPill label="Best" value={String(stats.bestStreak)} color="#f59e0b" />
-        <button onClick={() => setStats(emptyStats())} style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif' }}>Reset</button>
+        <button onClick={resetAll} style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', padding: '2px 4px' }}>Reset</button>
       </div>
 
       {/* Body */}
@@ -227,7 +293,7 @@ export default function BonusMathDrill() {
             border: zoneFilter === null ? '2px solid #e8c86a' : '2px solid rgba(255,255,255,0.08)',
             background: zoneFilter === null ? 'rgba(232,200,106,0.15)' : 'transparent',
             color: zoneFilter === null ? '#e8c86a' : 'rgba(255,255,255,0.3)',
-            fontSize: 9, fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase',
+            fontSize: 9, fontWeight: 900, textTransform: 'uppercase',
             cursor: 'pointer', touchAction: 'manipulation', textAlign: 'center', lineHeight: 1.3,
           }}>ALL<br /><span style={{ fontSize: 8, opacity: 0.7 }}>Random</span></button>
 
@@ -236,48 +302,69 @@ export default function BonusMathDrill() {
           {ZONES.map(z => {
             const m = ZONE_META[z];
             const active = zoneFilter === z;
+            const zs = zoneStats[z];
+            const zpct = zs.total > 0 ? Math.round((zs.correct / zs.total) * 100) : null;
+            const dotColor = zpct === null ? 'rgba(255,255,255,0.15)' : zpct >= 90 ? '#4ade80' : zpct >= 70 ? '#fbbf24' : '#f87171';
             return (
               <button key={z} onClick={() => selectFilter(z)} style={{
-                margin: '0 5px', padding: '8px 3px',
+                margin: '0 5px', padding: '7px 3px',
                 border: active ? `2px solid ${m.color}` : '2px solid rgba(255,255,255,0.06)',
                 background: active ? `${m.color}22` : 'transparent',
                 color: active ? m.color : 'rgba(255,255,255,0.35)',
                 cursor: 'pointer', touchAction: 'manipulation',
                 textAlign: 'center', lineHeight: 1.3, borderRadius: 7,
                 boxShadow: active ? `0 0 10px ${m.color}44` : 'none',
-                transition: 'all 0.15s',
+                transition: 'all 0.15s', position: 'relative',
               }}>
                 <div style={{ fontSize: 10, fontWeight: 900 }}>{m.short}</div>
-                <div style={{ fontSize: 8, opacity: 0.75, marginTop: 2, fontWeight: 700 }}>{m.rate}</div>
+                <div style={{ fontSize: 8, opacity: 0.75, marginTop: 1, fontWeight: 700 }}>{m.rate}</div>
+                {/* Per-zone accuracy dot */}
+                <div style={{
+                  marginTop: 3, fontSize: 8, fontWeight: 900,
+                  color: dotColor,
+                }}>
+                  {zpct !== null ? `${zpct}%` : '—'}
+                </div>
               </button>
             );
           })}
         </div>
 
         {/* Main drill area */}
-        <div className="felt flex-1 flex flex-col items-center py-4 px-3 gap-3 overflow-hidden min-h-0">
+        <div className="felt flex-1 flex flex-col items-center py-3 px-3 gap-3 overflow-y-auto min-h-0">
 
           {/* Zone label */}
           <div style={{
             background: 'rgba(0,0,0,0.4)', border: `2px solid ${meta.color}44`,
-            borderRadius: 12, padding: '8px 14px', textAlign: 'center', width: '100%',
+            borderRadius: 12, padding: '7px 14px', textAlign: 'center', width: '100%',
           }}>
-            <div style={{ color: meta.color, fontSize: 18, fontWeight: 900 }}>
+            <div style={{ color: meta.color, fontSize: 17, fontWeight: 900 }}>
               {meta.label} <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>· {meta.rate}</span>
             </div>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, marginTop: 2 }}>{meta.trigger}</div>
           </div>
 
-          {/* Shortcut card */}
-          <div style={{
-            width: '100%', borderRadius: 10, padding: '8px 12px',
-            background: `${meta.color}12`, border: `1px solid ${meta.color}33`,
-          }}>
-            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>
-              Mental shortcut
+          {/* Shortcut card — hidden in Blind mode */}
+          {showShortcut ? (
+            <div style={{
+              width: '100%', borderRadius: 10, padding: '8px 12px',
+              background: `${meta.color}12`, border: `1px solid ${meta.color}33`,
+            }}>
+              <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>
+                Mental shortcut
+              </div>
+              <div style={{ color: meta.color, fontSize: 14, fontWeight: 900 }}>{meta.shortcut}</div>
+              <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, marginTop: 2, fontStyle: 'italic' }}>{meta.shortcutDetail}</div>
             </div>
-            <div style={{ color: meta.color, fontSize: 14, fontWeight: 900 }}>{meta.shortcut}</div>
-            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, marginTop: 2, fontStyle: 'italic' }}>{meta.shortcutDetail}</div>
-          </div>
+          ) : (
+            <div style={{
+              width: '100%', borderRadius: 10, padding: '8px 12px',
+              background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)',
+              textAlign: 'center',
+            }}>
+              <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, fontWeight: 700 }}>🙈 Blind mode — shortcut hidden</div>
+            </div>
+          )}
 
           {/* Timer bar */}
           {timed && phase === 'question' && (
@@ -291,111 +378,174 @@ export default function BonusMathDrill() {
             </div>
           )}
 
-          {/* Bet + question */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%' }}>
-
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                Side bet
-              </div>
-              <div style={{ color: '#e8c86a', fontSize: 48, fontWeight: 900, lineHeight: 1.1 }}>
-                ${bet.toLocaleString()}
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                Profit on {meta.label}?
-              </div>
+          {/* Bet display */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>
+              Side bet
             </div>
-
-            {/* Answer grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', maxWidth: 300, marginTop: 4 }}>
-              {options.map(opt => {
-                const isCorrectOpt = opt === correct;
-                const isSelected = answer?.selected === opt;
-                let bg = 'rgba(255,255,255,0.06)';
-                let border = 'rgba(255,255,255,0.15)';
-                let color = '#f5f0e8';
-                if (isAnswered) {
-                  if (isCorrectOpt) { bg = 'rgba(22,163,74,0.25)'; border = '#4ade80'; color = '#4ade80'; }
-                  else if (isSelected) { bg = 'rgba(220,38,38,0.25)'; border = '#f87171'; color = '#f87171'; }
-                  else { bg = 'rgba(255,255,255,0.02)'; border = 'rgba(255,255,255,0.06)'; color = 'rgba(255,255,255,0.2)'; }
-                }
-                return (
-                  <button key={opt} onClick={() => handleAnswer(opt)} disabled={isAnswered} style={{
-                    height: 56, fontSize: 18, fontWeight: 900,
-                    borderRadius: 11, cursor: isAnswered ? 'default' : 'pointer', touchAction: 'manipulation',
-                    background: bg, border: `2px solid ${border}`, color,
-                    transition: 'all 0.12s',
-                    boxShadow: isCorrectOpt && isAnswered ? '0 0 14px rgba(74,222,128,0.4)' : 'none',
-                  }}>
-                    +${opt.toLocaleString()}
-                  </button>
-                );
-              })}
+            <ChipStack bet={bet} />
+            <div style={{ color: '#e8c86a', fontSize: 36, fontWeight: 900, lineHeight: 1, marginTop: 6 }}>
+              ${bet.toLocaleString()}
             </div>
-
-            {/* Timed mode — timeout feedback */}
-            {isAnswered && answer?.selected === -1 && (
-              <div style={{ color: '#f87171', fontSize: 13, fontWeight: 900 }}>⏱ Time's up!</div>
-            )}
-
-            {/* Breakdown panel */}
-            {isAnswered && (
-              <div style={{
-                width: '100%', maxWidth: 300, borderRadius: 10, overflow: 'hidden',
-                border: `1px solid ${answer?.correct ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.3)'}`,
-                background: 'rgba(0,0,0,0.4)',
-              }}>
-                <div style={{
-                  padding: '5px 10px',
-                  background: answer?.correct ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.12)',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)',
-                  color: answer?.correct ? '#4ade80' : '#f87171',
-                  fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em',
-                }}>
-                  {answer?.correct ? '✓ Correct' : `✗ Answer: +$${correct.toLocaleString()}`} · Breakdown
-                </div>
-                <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {lines.map((l, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>
-                        {l.count > 1 ? `${l.count} × ` : ''}${l.denom.toLocaleString()}
-                        {l.count > 1 ? ` = $${l.subtotal.toLocaleString()}` : ''} × {meta.multiple}
-                      </span>
-                      <span style={{ color: '#e8c86a', fontSize: 12, fontWeight: 900 }}>
-                        ${l.pays.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                  {lines.length > 1 && (
-                    <>
-                      <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 0' }} />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Total</span>
-                        <span style={{ color: '#4ade80', fontSize: 14, fontWeight: 900 }}>
-                          +${correct.toLocaleString()}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Next button */}
-            {isAnswered && !answer?.correct && (
-              <button onClick={nextRound} style={{
-                width: '100%', maxWidth: 300, height: 48, fontSize: 15, fontWeight: 900,
-                letterSpacing: '0.1em', textTransform: 'uppercase',
-                borderRadius: 12, background: '#7a1826', color: '#fff',
-                border: '1px solid rgba(200,80,100,0.5)',
-                cursor: 'pointer', touchAction: 'manipulation',
-              }}>
-                Next →
-              </button>
-            )}
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>
+              Profit on {meta.label}?
+            </div>
           </div>
+
+          {/* Answer grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', maxWidth: 310 }}>
+            {options.map(opt => {
+              const isCorrectOpt = opt === correct;
+              const isSelected = answer?.selected === opt;
+              let bg = 'rgba(255,255,255,0.06)';
+              let border = 'rgba(255,255,255,0.15)';
+              let color = '#f5f0e8';
+              if (isAnswered) {
+                if (isCorrectOpt) { bg = 'rgba(22,163,74,0.25)'; border = '#4ade80'; color = '#4ade80'; }
+                else if (isSelected) { bg = 'rgba(220,38,38,0.25)'; border = '#f87171'; color = '#f87171'; }
+                else { bg = 'rgba(255,255,255,0.02)'; border = 'rgba(255,255,255,0.05)'; color = 'rgba(255,255,255,0.18)'; }
+              }
+              return (
+                <button key={opt} onClick={() => handleAnswer(opt)} disabled={isAnswered} style={{
+                  height: 58, fontSize: 18, fontWeight: 900,
+                  borderRadius: 11, cursor: isAnswered ? 'default' : 'pointer', touchAction: 'manipulation',
+                  background: bg, border: `2px solid ${border}`, color,
+                  transition: 'all 0.12s',
+                  boxShadow: isCorrectOpt && isAnswered ? '0 0 16px rgba(74,222,128,0.45)' : 'none',
+                }}>
+                  +${opt.toLocaleString()}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Timeout label */}
+          {isAnswered && answer?.selected === -1 && (
+            <div style={{ color: '#f87171', fontSize: 13, fontWeight: 900 }}>⏱ Time's up!</div>
+          )}
+
+          {/* Breakdown panel — always shown after answering */}
+          {isAnswered && (
+            <div style={{
+              width: '100%', maxWidth: 310, borderRadius: 10, overflow: 'hidden',
+              border: `1px solid ${answer?.correct ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.3)'}`,
+              background: 'rgba(0,0,0,0.45)',
+            }}>
+              <div style={{
+                padding: '5px 12px',
+                background: answer?.correct ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.12)',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                color: answer?.correct ? '#4ade80' : '#f87171',
+                fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em',
+              }}>
+                {answer?.correct ? '✓ Correct' : `✗ Correct: +$${correct.toLocaleString()}`} · Breakdown
+              </div>
+              <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {lines.map((l, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>
+                      {l.count > 1 ? `${l.count}×$${l.denom} ($${l.subtotal})` : `$${l.denom}`} × {meta.multiple}
+                    </span>
+                    <span style={{ color: '#e8c86a', fontSize: 13, fontWeight: 900 }}>
+                      ${l.pays.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+                {lines.length > 1 && (
+                  <>
+                    <div style={{ height: 1, background: 'rgba(255,255,255,0.1)' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Total profit</span>
+                      <span style={{ color: '#4ade80', fontSize: 15, fontWeight: 900 }}>+${correct.toLocaleString()}</span>
+                    </div>
+                  </>
+                )}
+                {/* Shortcut reminder in Blind mode */}
+                {!showShortcut && (
+                  <div style={{ marginTop: 4, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontStyle: 'italic' }}>
+                    Shortcut: {meta.shortcut}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Next button — always shown on wrong, auto-advances on correct */}
+          {isAnswered && !answer?.correct && (
+            <button onClick={nextRound} style={{
+              width: '100%', maxWidth: 310, height: 48, fontSize: 15, fontWeight: 900,
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              borderRadius: 12, background: '#7a1826', color: '#fff',
+              border: '1px solid rgba(200,80,100,0.5)',
+              cursor: 'pointer', touchAction: 'manipulation',
+            }}>
+              Next →
+            </button>
+          )}
+          {isAnswered && answer?.correct && (
+            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, textAlign: 'center' }}>Auto-advancing…</div>
+          )}
         </div>
       </div>
+
+      {/* Reference modal */}
+      {showRef && (
+        <div onClick={() => setShowRef(false)} style={{
+          position: 'fixed', inset: 0, zIndex: 50,
+          background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: '#111720', borderRadius: '20px 20px 0 0',
+            border: '2px solid rgba(232,200,106,0.25)', borderBottom: 'none',
+            width: '100%', maxWidth: 500,
+            padding: '20px 16px 32px',
+            maxHeight: '88dvh', overflowY: 'auto',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ color: '#e8c86a', fontSize: 13, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                Bonus Rate Reference
+              </div>
+              <button onClick={() => setShowRef(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+            </div>
+
+            {ZONES.map(z => {
+              const m = ZONE_META[z];
+              const zs = zoneStats[z];
+              const zpct = zs.total > 0 ? Math.round((zs.correct / zs.total) * 100) : null;
+              return (
+                <div key={z} style={{
+                  marginBottom: 10, borderRadius: 12, padding: '11px 13px',
+                  background: `${m.color}0e`, border: `1.5px solid ${m.color}30`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <div style={{ color: m.color, fontSize: 14, fontWeight: 900 }}>{m.label}</div>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      {zpct !== null && (
+                        <span style={{ color: zpct >= 90 ? '#4ade80' : zpct >= 70 ? '#fbbf24' : '#f87171', fontSize: 10, fontWeight: 900 }}>
+                          {zpct}% ({zs.total})
+                        </span>
+                      )}
+                      <span style={{ background: `${m.color}22`, border: `1px solid ${m.color}55`, color: m.color, fontSize: 11, fontWeight: 900, borderRadius: 5, padding: '2px 7px' }}>{m.rate}</span>
+                    </div>
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginBottom: 5 }}>{m.trigger}</div>
+                  <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '5px 9px' }}>
+                    <div style={{ color: m.color, fontSize: 12, fontWeight: 900 }}>⚡ {m.shortcut}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, marginTop: 2, fontStyle: 'italic' }}>{m.shortcutDetail}</div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div style={{ marginTop: 6, padding: '9px 11px', borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)', fontSize: 10, lineHeight: 1.6 }}>
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>Tip:</span> Profit = side bet × rate. The original bet is also returned to the player.
+              <br />
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>Blind mode</span> hides the shortcut so you practice from memory.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
