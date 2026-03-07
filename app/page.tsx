@@ -146,21 +146,21 @@ function ChipTower({ values, style }: { values: number[]; style?: React.CSSPrope
 // ─── Chip-fall transition ─────────────────────────────────────────────────────
 
 const FALL_CHIPS: Array<{ value: number; left: string; delay: string; dur: string }> = [
-  { value: 100, left:  '4%', delay:   '0ms', dur: '620ms' },
-  { value:   5, left: '13%', delay:  '55ms', dur: '670ms' },
-  { value:  20, left: '22%', delay:  '20ms', dur: '645ms' },
-  { value:   1, left: '32%', delay:  '80ms', dur: '700ms' },
-  { value:   5, left: '42%', delay:  '10ms', dur: '635ms' },
-  { value: 100, left: '52%', delay:  '65ms', dur: '660ms' },
-  { value:  20, left: '62%', delay:  '30ms', dur: '690ms' },
-  { value:   1, left: '72%', delay:  '75ms', dur: '640ms' },
-  { value:   5, left: '82%', delay:  '15ms', dur: '670ms' },
-  { value: 100, left: '91%', delay:  '45ms', dur: '650ms' },
-  { value:   1, left:  '8%', delay: '120ms', dur: '665ms' },
-  { value:  20, left: '27%', delay: '140ms', dur: '635ms' },
-  { value:   5, left: '47%', delay: '110ms', dur: '680ms' },
-  { value: 100, left: '67%', delay: '135ms', dur: '650ms' },
-  { value:   1, left: '87%', delay: '155ms', dur: '620ms' },
+  { value: 100, left: '-4%',  delay:   '0ms', dur: '680ms' },
+  { value:   5, left:  '9%',  delay:  '40ms', dur: '720ms' },
+  { value:  20, left: '22%',  delay:  '10ms', dur: '695ms' },
+  { value:   1, left: '35%',  delay:  '60ms', dur: '740ms' },
+  { value:   5, left: '48%',  delay:   '5ms', dur: '685ms' },
+  { value: 100, left: '61%',  delay:  '50ms', dur: '710ms' },
+  { value:  20, left: '74%',  delay:  '25ms', dur: '730ms' },
+  { value:   1, left: '86%',  delay:  '70ms', dur: '690ms' },
+  { value:   5, left:  '3%',  delay: '110ms', dur: '715ms' },
+  { value: 100, left: '16%',  delay: '130ms', dur: '680ms' },
+  { value:   1, left: '29%',  delay: '100ms', dur: '725ms' },
+  { value:  20, left: '43%',  delay: '145ms', dur: '695ms' },
+  { value:   5, left: '57%',  delay:  '90ms', dur: '740ms' },
+  { value: 100, left: '70%',  delay: '120ms', dur: '700ms' },
+  { value:   1, left: '83%',  delay: '155ms', dur: '670ms' },
 ];
 
 // ─── Drills ───────────────────────────────────────────────────────────────────
@@ -228,22 +228,16 @@ export default function LandingPage() {
 
         {/* Dragon (left) — bigger, detailed glow layers */}
         <div style={{ position: 'absolute', left: '-8%', top: 0, bottom: 0, display: 'flex', alignItems: 'center', pointerEvents: 'none', userSelect: 'none' }}>
-          {/* Ambient glow behind dragon */}
           <div style={{ position: 'absolute', width: '110%', height: '80%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(34,197,94,0.18) 0%, transparent 70%)', filter: 'blur(20px)' }} />
-          {/* Shadow copy for depth */}
-          <span style={{ position: 'absolute', fontSize: 'min(72vw, 440px)', lineHeight: 1, transform: 'scaleX(-1) translate(6%, 3%)', opacity: 0.06, filter: 'blur(8px)' }}>🐉</span>
-          {/* Main dragon */}
-          <span style={{ fontSize: 'min(72vw, 440px)', lineHeight: 1, transform: 'scaleX(-1)', opacity: 0.22, filter: 'drop-shadow(0 0 24px rgba(34,197,94,0.6)) drop-shadow(0 0 60px rgba(34,197,94,0.3))' }}>🐉</span>
+          <span style={{ position: 'absolute', lineHeight: 1, transform: 'scaleX(-1) translate(6%, 3%)', opacity: 0.06, filter: 'blur(8px)' }} className="hero-dragon">🐉</span>
+          <span style={{ lineHeight: 1, transform: 'scaleX(-1)', opacity: 0.22, filter: 'drop-shadow(0 0 24px rgba(34,197,94,0.6)) drop-shadow(0 0 60px rgba(34,197,94,0.3))', fontSize: 'min(72vw, 440px)' }} className="hero-dragon">🐉</span>
         </div>
 
         {/* Panda (right) — bigger, detailed glow layers */}
         <div style={{ position: 'absolute', right: '-8%', top: 0, bottom: 0, display: 'flex', alignItems: 'center', pointerEvents: 'none', userSelect: 'none' }}>
-          {/* Ambient glow behind panda */}
           <div style={{ position: 'absolute', width: '110%', height: '80%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(200,200,220,0.14) 0%, transparent 70%)', filter: 'blur(20px)' }} />
-          {/* Shadow copy for depth */}
-          <span style={{ position: 'absolute', fontSize: 'min(65vw, 400px)', lineHeight: 1, transform: 'translate(-6%, 3%)', opacity: 0.06, filter: 'blur(8px)' }}>🐼</span>
-          {/* Main panda */}
-          <span style={{ fontSize: 'min(65vw, 400px)', lineHeight: 1, opacity: 0.2, filter: 'drop-shadow(0 0 22px rgba(255,255,255,0.5)) drop-shadow(0 0 55px rgba(200,200,220,0.25))' }}>🐼</span>
+          <span style={{ position: 'absolute', lineHeight: 1, transform: 'translate(-6%, 3%)', opacity: 0.06, filter: 'blur(8px)' }} className="hero-panda">🐼</span>
+          <span style={{ lineHeight: 1, opacity: 0.2, filter: 'drop-shadow(0 0 22px rgba(255,255,255,0.5)) drop-shadow(0 0 55px rgba(200,200,220,0.25))', fontSize: 'min(65vw, 400px)' }} className="hero-panda">🐼</span>
         </div>
 
         {/* Large faded suit symbols in corners */}
@@ -431,10 +425,10 @@ export default function LandingPage() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 9999, overflow: 'hidden', background: 'rgba(4,6,10,0.88)', pointerEvents: 'all' }}>
             {FALL_CHIPS.map((fc, i) => (
               <div key={i} style={{
-                position: 'absolute', left: fc.left, top: '-70px',
+                position: 'absolute', left: fc.left, top: '-200px',
                 animation: `chipFall ${fc.dur} ${fc.delay} ease-in forwards`,
               }}>
-                <Chip value={fc.value} size={46} />
+                <Chip value={fc.value} size={184} />
               </div>
             ))}
           </div>

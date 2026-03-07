@@ -282,9 +282,25 @@ body {
 .spin-ring-ccw { animation: spinCCW 42s linear infinite; }
 
 @keyframes chipFall {
-  0%   { transform: translateY(-80px) rotate(-20deg) scale(0.7); opacity: 0; }
-  8%   { transform: translateY(10px)  rotate(15deg)  scale(1.05); opacity: 1; }
-  100% { transform: translateY(115vh) rotate(600deg) scale(0.85); opacity: 0; }
+  0%   { transform: translateY(-220px) rotate(-20deg) scale(0.7); opacity: 0; }
+  8%   { transform: translateY(10px)   rotate(15deg)  scale(1.05); opacity: 1; }
+  100% { transform: translateY(120vh)  rotate(600deg) scale(0.85); opacity: 0; }
+}
+
+/* ─── Mobile overrides ──────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Hide floating cards on mobile — too cluttered on small screens */
+  .landing-card-a,
+  .landing-card-b,
+  .landing-card-c,
+  .landing-card-d,
+  .landing-card-e,
+  .landing-card-f,
+  .landing-card-g { display: none !important; }
+
+  /* Shrink dragon/panda so they don't overlap on narrow screens */
+  .hero-dragon { font-size: min(42vw, 180px) !important; left: 0 !important; }
+  .hero-panda  { font-size: min(38vw, 160px) !important; right: 0 !important; }
 }
 
 .shimmer-gold {
