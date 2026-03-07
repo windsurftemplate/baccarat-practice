@@ -30,7 +30,6 @@ type Answer = 'natural' | 'no' | null;
 type Phase = 'player' | 'banker' | 'result';
 
 export default function NaturalsDrill() {
-  const [shoe, setShoe] = useState<Card[]>(() => createShoe());
   const [hand, setHand] = useState(() => {
     const s = createShoe();
     return { playerCards: [s[0], s[1]], bankerCards: [s[2], s[3]], shoe: s.slice(4) };

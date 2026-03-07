@@ -27,7 +27,8 @@ function dealHand(): Card[] {
 
 function makeOptions(correct: number): number[] {
   const pool = new Set([correct]);
-  while (pool.size < 4) pool.add(Math.floor(Math.random() * 10));
+  const all = [0,1,2,3,4,5,6,7,8,9].filter(n => n !== correct).sort(() => Math.random() - 0.5);
+  for (const n of all) { if (pool.size >= 4) break; pool.add(n); }
   return [...pool].sort(() => Math.random() - 0.5);
 }
 
@@ -35,22 +36,20 @@ interface Stats { correct: number; total: number; streak: number; bestStreak: nu
 const emptyStats = (): Stats => ({ correct: 0, total: 0, streak: 0, bestStreak: 0 });
 type AnswerState = { selected: number; correct: boolean } | null;
 
+function freshRound() {
+  const h = dealHand();
+  return { hand: h, options: makeOptions(handTotal(h)) };
+}
+
 export default function TotalsDrill() {
-  const [hand, setHand] = useState<Card[]>(() => dealHand());
-  const [options, setOptions] = useState<number[]>(() => {
-    const h = dealHand();
-    return makeOptions(handTotal(h));
-  });
+  const [{ hand, options }, setRound] = useState(freshRound);
   const [answer, setAnswer] = useState<AnswerState>(null);
   const [stats, setStats] = useState<Stats>(emptyStats);
 
   const correctTotal = handTotal(hand);
 
   function nextHand() {
-    const h = dealHand();
-    const t = handTotal(h);
-    setHand(h);
-    setOptions(makeOptions(t));
+    setRound(freshRound());
     setAnswer(null);
   }
 
@@ -66,9 +65,6 @@ export default function TotalsDrill() {
   }
 
   const pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
-
-  // Ensure options always include correct answer
-  const displayOptions = options.includes(correctTotal) ? options : makeOptions(correctTotal);
 
   return (
     <div className="flex flex-col" style={{ background: '#0d0d16', height: '100dvh', fontFamily: 'Georgia, serif' }}>
@@ -115,7 +111,7 @@ export default function TotalsDrill() {
 
         {/* Answer options grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%', maxWidth: 300 }}>
-          {displayOptions.map(opt => {
+          {options.map(opt => {
             const isSelected = answer?.selected === opt;
             const isCorrectOpt = opt === correctTotal;
             let bg = 'rgba(255,255,255,0.06)';
