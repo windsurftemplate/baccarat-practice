@@ -1,0 +1,167 @@
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Card, Suit, Rank } from '../../../lib/types';
+import { handTotal } from '../../../lib/baccarat';
+import CardView from '../../../components/Card';
+
+const SUITS: Suit[] = ['spades', 'hearts', 'diamonds', 'clubs'];
+const RANKS: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+function rankValue(rank: Rank): number {
+  if (rank === 'A') return 1;
+  const n = parseInt(rank);
+  if (!isNaN(n)) return n >= 10 ? 0 : n;
+  return 0;
+}
+
+function randomCard(): Card {
+  const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
+  const suit = SUITS[Math.floor(Math.random() * SUITS.length)];
+  return { rank, suit, value: rankValue(rank) };
+}
+
+function dealHand(): Card[] {
+  return Array.from({ length: 3 }, randomCard);
+}
+
+function makeOptions(correct: number): number[] {
+  const pool = new Set([correct]);
+  while (pool.size < 4) pool.add(Math.floor(Math.random() * 10));
+  return [...pool].sort(() => Math.random() - 0.5);
+}
+
+interface Stats { correct: number; total: number; streak: number; bestStreak: number; }
+const emptyStats = (): Stats => ({ correct: 0, total: 0, streak: 0, bestStreak: 0 });
+type AnswerState = { selected: number; correct: boolean } | null;
+
+export default function TotalsDrill() {
+  const [hand, setHand] = useState<Card[]>(() => dealHand());
+  const [options, setOptions] = useState<number[]>(() => {
+    const h = dealHand();
+    return makeOptions(handTotal(h));
+  });
+  const [answer, setAnswer] = useState<AnswerState>(null);
+  const [stats, setStats] = useState<Stats>(emptyStats);
+
+  const correctTotal = handTotal(hand);
+
+  function nextHand() {
+    const h = dealHand();
+    const t = handTotal(h);
+    setHand(h);
+    setOptions(makeOptions(t));
+    setAnswer(null);
+  }
+
+  function handleAnswer(val: number) {
+    if (answer) return;
+    const correct = val === correctTotal;
+    setAnswer({ selected: val, correct });
+    setStats(s => {
+      const newStreak = correct ? s.streak + 1 : 0;
+      return { correct: s.correct + (correct ? 1 : 0), total: s.total + 1, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak) };
+    });
+    if (correct) setTimeout(nextHand, 380);
+  }
+
+  const pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
+
+  // Ensure options always include correct answer
+  const displayOptions = options.includes(correctTotal) ? options : makeOptions(correctTotal);
+
+  return (
+    <div className="flex flex-col" style={{ background: '#0d0d16', height: '100dvh', fontFamily: 'Georgia, serif' }}>
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-1.5"
+        style={{ background: 'rgba(0,0,0,0.65)', borderBottom: '2px solid #7a1826' }}>
+        <Link href="/practice" style={{ color: 'rgba(232,200,106,0.6)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>← Drills</Link>
+        <div style={{ color: '#e8c86a', fontSize: 11, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' }}>🔢 Hand Totals</div>
+        <button onClick={() => setStats(emptyStats())} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer' }}>Reset</button>
+      </div>
+
+      {/* Stats bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-around', padding: '6px 16px', background: 'rgba(0,0,0,0.35)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <StatPill label="Answered" value={String(stats.total)} />
+        <StatPill label="Accuracy" value={pct !== null ? `${pct}%` : '—'} color={pct === null ? undefined : pct >= 90 ? '#4ade80' : pct >= 70 ? '#fbbf24' : '#f87171'} />
+        <StatPill label="Streak" value={String(stats.streak)} color="#fbbf24" />
+        <StatPill label="Best" value={String(stats.bestStreak)} color="#f59e0b" />
+      </div>
+
+      {/* Felt */}
+      <div className="flex-1 felt flex flex-col items-center justify-center gap-8 px-6">
+
+        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          What is the baccarat total?
+        </div>
+
+        {/* Hand */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 6, position: 'relative' }}>
+            {hand.map((card, i) => <CardView key={i} card={card} delay={i * 100} />)}
+          </div>
+          {answer && (
+            <div style={{
+              fontSize: 15, fontWeight: 900,
+              color: answer.correct ? '#4ade80' : '#f87171',
+            }}>
+              {answer.correct
+                ? `✓ Total is ${correctTotal}`
+                : `✗ Total is ${correctTotal} (${hand.map(c => c.value).join(' + ')} mod 10)`}
+            </div>
+          )}
+        </div>
+
+        {/* Answer options grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%', maxWidth: 300 }}>
+          {displayOptions.map(opt => {
+            const isSelected = answer?.selected === opt;
+            const isCorrectOpt = opt === correctTotal;
+            let bg = 'rgba(255,255,255,0.06)';
+            let border = 'rgba(255,255,255,0.15)';
+            let color = '#f5f0e8';
+            if (answer) {
+              if (isCorrectOpt) { bg = 'rgba(22,163,74,0.3)'; border = '#4ade80'; color = '#4ade80'; }
+              else if (isSelected) { bg = 'rgba(220,38,38,0.3)'; border = '#f87171'; color = '#f87171'; }
+              else { bg = 'rgba(255,255,255,0.03)'; border = 'rgba(255,255,255,0.06)'; color = 'rgba(255,255,255,0.25)'; }
+            }
+            return (
+              <button key={opt} onClick={() => handleAnswer(opt)} style={{
+                height: 64, fontSize: 28, fontWeight: 900,
+                borderRadius: 12, cursor: answer ? 'default' : 'pointer', touchAction: 'manipulation',
+                background: bg, border: `2px solid ${border}`, color,
+                transition: 'all 0.15s', boxShadow: isCorrectOpt && answer ? '0 0 16px rgba(74,222,128,0.4)' : 'none',
+              }}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+
+        {answer && !answer.correct && (
+          <button onClick={nextHand} style={{
+            padding: '10px 32px', fontSize: 14, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase',
+            borderRadius: 12, background: '#7a1826', color: '#fff', border: '1px solid rgba(200,80,100,0.5)',
+            cursor: 'pointer', touchAction: 'manipulation',
+          }}>
+            Next →
+          </button>
+        )}
+
+        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, textAlign: 'center' }}>
+          Sum all card values · drop the tens digit · result is 0–9
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatPill({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+      <span style={{ color: color ?? '#fff', fontSize: 14, fontWeight: 900 }}>{value}</span>
+      <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+    </div>
+  );
+}

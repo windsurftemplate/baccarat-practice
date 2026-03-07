@@ -140,6 +140,14 @@ function reducer(state: GameState, action: Action): GameState {
         result: null,
       };
 
+    case 'SET_BALANCE':
+      return {
+        ...state,
+        players: state.players.map(p =>
+          p.id === action.id ? { ...p, balance: action.balance } : p
+        ),
+      };
+
     case 'REBET': {
       if (state.phase !== 'betting' || !state.result) return state;
       return {

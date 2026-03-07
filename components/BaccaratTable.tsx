@@ -10,6 +10,7 @@ import ResultBanner from './ResultBanner';
 import Scorecard from './Scorecard';
 import StatsBar from './StatsBar';
 import BettingZone from './BettingZone';
+import ChipCountModal from './ChipCountModal';
 
 interface Props {
   state: GameState;
@@ -196,6 +197,7 @@ function getBankerWrongReason(bTotal: number, p3: import('../lib/types').Card | 
 
 export default function BaccaratTable({ state, dispatch }: Props) {
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [chipCountPlayer, setChipCountPlayer] = useState<TablePlayer | null>(null);
 
   const { phase, selectedChip, players, playerHand, bankerHand, result, history, shoe } = state;
 
@@ -405,6 +407,7 @@ export default function BaccaratTable({ state, dispatch }: Props) {
                       player={player} position={i + 1}
                       isBetting={isBetting} hasBets={hasBets} isWinner={isWinner} isLoser={isLoser}
                       dispatch={dispatch} showRemove={players.length > 1}
+                      onChipCount={() => setChipCountPlayer(player)}
                     />
                     {/* Player bet circle */}
                     <BetSpot player={player} zone="player" label="P" color="#5b9bf8"
@@ -510,6 +513,15 @@ export default function BaccaratTable({ state, dispatch }: Props) {
         </div>
       </div>
 
+      {/* Chip count modal */}
+      {chipCountPlayer && (
+        <ChipCountModal
+          player={chipCountPlayer}
+          onConfirm={balance => dispatch({ type: 'SET_BALANCE', id: chipCountPlayer.id, balance })}
+          onClose={() => setChipCountPlayer(null)}
+        />
+      )}
+
       {/* Chip tray + deal */}
       <StatsBar
         phase={phase} totalBets={totalBets} shoeCount={shoe.length}
@@ -523,11 +535,12 @@ export default function BaccaratTable({ state, dispatch }: Props) {
 
 /** Seat label — left side of each row */
 function SeatInfo({
-  player, position, isBetting, hasBets, isWinner, isLoser, dispatch, showRemove,
+  player, position, isBetting, hasBets, isWinner, isLoser, dispatch, showRemove, onChipCount,
 }: {
   player: TablePlayer; position: number; isBetting: boolean;
   hasBets: boolean; isWinner: boolean | undefined; isLoser: boolean | undefined;
   dispatch: (a: Action) => void; showRemove: boolean;
+  onChipCount: () => void;
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0, gap: 2 }}>
@@ -548,12 +561,19 @@ function SeatInfo({
         {player.name}
       </div>
 
-      <div style={{
-        fontSize: 8,
-        color: isWinner ? '#4ade80' : isLoser ? '#f87171' : 'rgba(232,200,106,0.65)',
-        fontWeight: 700,
-        transition: 'color 0.3s',
-      }}>
+      <div
+        onClick={e => { e.stopPropagation(); onChipCount(); }}
+        title="Set balance by chip count"
+        style={{
+          fontSize: 8,
+          color: isWinner ? '#4ade80' : isLoser ? '#f87171' : 'rgba(232,200,106,0.65)',
+          fontWeight: 700,
+          transition: 'color 0.3s',
+          cursor: 'pointer',
+          textDecoration: 'underline dotted',
+          textUnderlineOffset: 2,
+        }}
+      >
         ${player.balance.toLocaleString()}
       </div>
 

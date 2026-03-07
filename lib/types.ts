@@ -87,4 +87,5 @@ export type Action =
   | { type: 'BANKER_HIT' }
   | { type: 'BANKER_STAND' }
   | { type: 'NEXT_ROUND' }
-  | { type: 'REBET' };
+  | { type: 'REBET' }
+  | { type: 'SET_BALANCE'; id: string; balance: number };
