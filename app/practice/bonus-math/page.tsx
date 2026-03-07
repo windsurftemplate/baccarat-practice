@@ -524,56 +524,52 @@ export default function BonusMathDrill() {
         <button onClick={resetAll} style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', padding: '2px 4px' }}>Reset</button>
       </div>
 
+      {/* ── Zone selector — horizontal scrollable strip ── */}
+      <div style={{
+        display: 'flex', overflowX: 'auto', gap: 6, padding: '8px 10px',
+        background: 'rgba(0,0,0,0.45)', borderBottom: '1px solid rgba(255,255,255,0.07)',
+        WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
+        flexShrink: 0,
+      }}>
+        <button onClick={() => selectFilter(null)} style={{
+          flexShrink: 0, padding: '10px 16px', borderRadius: 10,
+          border: zoneFilter === null ? '2px solid #e8c86a' : '2px solid rgba(255,255,255,0.1)',
+          background: zoneFilter === null ? 'rgba(232,200,106,0.15)' : 'rgba(255,255,255,0.04)',
+          color: zoneFilter === null ? '#e8c86a' : 'rgba(255,255,255,0.4)',
+          fontSize: 12, fontWeight: 900, textTransform: 'uppercase',
+          cursor: 'pointer', touchAction: 'manipulation', textAlign: 'center', lineHeight: 1.3,
+          minWidth: 56,
+        }}>ALL<br /><span style={{ fontSize: 9, opacity: 0.65 }}>Random</span></button>
+
+        {ZONES.map(z => {
+          const m = ZONE_META[z];
+          const active = zoneFilter === z;
+          const zs = zoneStats[z];
+          const zpct = zs.total > 0 ? Math.round((zs.correct / zs.total) * 100) : null;
+          const dotColor = zpct === null ? 'rgba(255,255,255,0.25)' : zpct >= 90 ? '#4ade80' : zpct >= 70 ? '#fbbf24' : '#f87171';
+          return (
+            <button key={z} onClick={() => selectFilter(z)} style={{
+              flexShrink: 0, padding: '10px 16px', borderRadius: 10,
+              border: active ? `2px solid ${m.color}` : '2px solid rgba(255,255,255,0.08)',
+              background: active ? `${m.color}22` : 'rgba(255,255,255,0.03)',
+              color: active ? m.color : 'rgba(255,255,255,0.4)',
+              cursor: 'pointer', touchAction: 'manipulation',
+              textAlign: 'center', lineHeight: 1.3, minWidth: 60,
+              boxShadow: active ? `0 0 14px ${m.color}44` : 'none',
+              transition: 'all 0.15s',
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 900 }}>{m.short}</div>
+              <div style={{ fontSize: 10, opacity: 0.8, marginTop: 1, fontWeight: 700 }}>{m.rate}</div>
+              <div style={{ fontSize: 9, fontWeight: 900, color: dotColor, marginTop: 2 }}>
+                {zpct !== null ? `${zpct}%` : '—'}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Body */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-
-        {/* Zone sidebar */}
-        <div style={{
-          width: 64, flexShrink: 0, display: 'flex', flexDirection: 'column',
-          background: 'rgba(0,0,0,0.45)', borderRight: '1px solid rgba(255,255,255,0.07)',
-          padding: '8px 0', gap: 4, overflowY: 'auto',
-        }}>
-          <button onClick={() => selectFilter(null)} style={{
-            margin: '0 5px', padding: '7px 3px', borderRadius: 7,
-            border: zoneFilter === null ? '2px solid #e8c86a' : '2px solid rgba(255,255,255,0.08)',
-            background: zoneFilter === null ? 'rgba(232,200,106,0.15)' : 'transparent',
-            color: zoneFilter === null ? '#e8c86a' : 'rgba(255,255,255,0.3)',
-            fontSize: 9, fontWeight: 900, textTransform: 'uppercase',
-            cursor: 'pointer', touchAction: 'manipulation', textAlign: 'center', lineHeight: 1.3,
-          }}>ALL<br /><span style={{ fontSize: 8, opacity: 0.7 }}>Random</span></button>
-
-          <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '2px 5px' }} />
-
-          {ZONES.map(z => {
-            const m = ZONE_META[z];
-            const active = zoneFilter === z;
-            const zs = zoneStats[z];
-            const zpct = zs.total > 0 ? Math.round((zs.correct / zs.total) * 100) : null;
-            const dotColor = zpct === null ? 'rgba(255,255,255,0.15)' : zpct >= 90 ? '#4ade80' : zpct >= 70 ? '#fbbf24' : '#f87171';
-            return (
-              <button key={z} onClick={() => selectFilter(z)} style={{
-                margin: '0 5px', padding: '7px 3px',
-                border: active ? `2px solid ${m.color}` : '2px solid rgba(255,255,255,0.06)',
-                background: active ? `${m.color}22` : 'transparent',
-                color: active ? m.color : 'rgba(255,255,255,0.35)',
-                cursor: 'pointer', touchAction: 'manipulation',
-                textAlign: 'center', lineHeight: 1.3, borderRadius: 7,
-                boxShadow: active ? `0 0 10px ${m.color}44` : 'none',
-                transition: 'all 0.15s', position: 'relative',
-              }}>
-                <div style={{ fontSize: 10, fontWeight: 900 }}>{m.short}</div>
-                <div style={{ fontSize: 8, opacity: 0.75, marginTop: 1, fontWeight: 700 }}>{m.rate}</div>
-                {/* Per-zone accuracy dot */}
-                <div style={{
-                  marginTop: 3, fontSize: 8, fontWeight: 900,
-                  color: dotColor,
-                }}>
-                  {zpct !== null ? `${zpct}%` : '—'}
-                </div>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Main drill area */}
         <div className="felt flex-1 flex flex-col items-center py-3 px-3 gap-3 overflow-y-auto min-h-0">
