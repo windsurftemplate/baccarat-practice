@@ -1,64 +1,71 @@
 'use client';
 import Link from 'next/link';
 
-// ─── Playing card ─────────────────────────────────────────────────────────────
+// ─── Baccarat road bead ───────────────────────────────────────────────────────
 
-const SUITS: Record<string, { symbol: string; color: string; isRed: boolean }> = {
-  spades:   { symbol: '♠', color: '#111827', isRed: false },
-  hearts:   { symbol: '♥', color: '#c0392b', isRed: true  },
-  diamonds: { symbol: '♦', color: '#c0392b', isRed: true  },
-  clubs:    { symbol: '♣', color: '#111827', isRed: false },
+const BEAD_CFG = {
+  B: { bg: '#b91c1c', rim: '#f87171', label: 'B' },
+  P: { bg: '#1d4ed8', rim: '#93c5fd', label: 'P' },
+  T: { bg: '#15803d', rim: '#86efac', label: 'T' },
 };
 
-function FloatingCard({
-  rank, suit, className, style,
-}: {
-  rank: string; suit: keyof typeof SUITS; className: string; style?: React.CSSProperties;
+function RoadBead({ outcome, size = 44, className, style }: {
+  outcome: 'B' | 'P' | 'T';
+  size?: number;
+  className?: string;
+  style?: React.CSSProperties;
 }) {
-  const s = SUITS[suit];
+  const c = BEAD_CFG[outcome];
   return (
     <div className={className} style={{
       position: 'absolute',
-      width: 64, height: 90,
-      background: 'linear-gradient(170deg, #ffffff 0%, #f8f4ee 100%)',
-      borderRadius: 6,
-      boxShadow: '0 12px 40px rgba(0,0,0,0.9), 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.9)',
-      border: '1px solid #e8e0d0',
-      overflow: 'hidden',
+      width: size, height: size, borderRadius: '50%',
+      background: `radial-gradient(ellipse at 32% 28%, ${c.rim}cc, ${c.bg} 55%, #000 130%)`,
+      border: `2.5px solid ${c.rim}`,
+      boxShadow: [
+        `0 ${Math.round(size * 0.07)}px 0 rgba(0,0,0,0.6)`,
+        `0 ${Math.round(size * 0.18)}px ${Math.round(size * 0.3)}px rgba(0,0,0,0.7)`,
+        `inset 0 2px 4px rgba(255,255,255,0.4)`,
+        `inset 0 -2px 4px rgba(0,0,0,0.4)`,
+      ].join(', '),
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
       ...style,
     }}>
-      {/* Top-left corner index */}
-      <div style={{
-        position: 'absolute', top: 4, left: 5,
-        color: s.color, fontFamily: 'Arial, sans-serif', lineHeight: 1,
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-      }}>
-        <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.03em' }}>{rank}</span>
-        <span style={{ fontSize: 11, marginTop: 0 }}>{s.symbol}</span>
-      </div>
+      <span style={{
+        color: '#fff', fontWeight: 900, fontSize: size * 0.38,
+        fontFamily: 'Arial Black, Arial, sans-serif',
+        textShadow: '0 1px 3px rgba(0,0,0,0.7)',
+        lineHeight: 1,
+      }}>{c.label}</span>
+    </div>
+  );
+}
 
-      {/* Bottom-right corner index (upside-down) */}
-      <div style={{
-        position: 'absolute', bottom: 4, right: 5,
-        color: s.color, fontFamily: 'Arial, sans-serif', lineHeight: 1,
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        transform: 'rotate(180deg)',
-      }}>
-        <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.03em' }}>{rank}</span>
-        <span style={{ fontSize: 11, marginTop: 0 }}>{s.symbol}</span>
-      </div>
+// Mini road grid — decorative background scorecard
+const ROAD: Array<'B' | 'P' | 'T'> = [
+  'B','B','P','B','B','P','P','B',
+  'B','P','P','B','P','B','P','P',
+  'P','B','B','P','B','B','T','B',
+  'P','P','B','B','P','P','B','P',
+];
 
-      {/* Center pip */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{
-          color: s.color, fontSize: 28, lineHeight: 1,
-          opacity: 0.9,
-          textShadow: s.isRed ? '0 1px 4px rgba(192,57,43,0.25)' : '0 1px 4px rgba(0,0,0,0.15)',
-        }}>{s.symbol}</span>
-      </div>
+function MiniRoad({ style }: { style?: React.CSSProperties }) {
+  const cols = 8;
+  return (
+    <div style={{
+      display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`,
+      gap: 5, ...style,
+    }}>
+      {ROAD.map((r, i) => {
+        const c = BEAD_CFG[r];
+        return (
+          <div key={i} style={{
+            width: 22, height: 22, borderRadius: '50%',
+            background: `radial-gradient(ellipse at 35% 30%, ${c.rim}99, ${c.bg})`,
+            border: `1.5px solid ${c.rim}55`,
+          }} />
+        );
+      })}
     </div>
   );
 }
@@ -241,14 +248,17 @@ export default function LandingPage() {
           }} />
         </div>
 
-        {/* Floating cards */}
-        <FloatingCard rank="A" suit="spades"   className="landing-card-a" style={{ top: '7%',   left: '4%',   opacity: 0.85, zIndex: 0 }} />
-        <FloatingCard rank="K" suit="hearts"   className="landing-card-b" style={{ top: '5%',   right: '4%',  opacity: 0.8,  zIndex: 0 }} />
-        <FloatingCard rank="9" suit="diamonds" className="landing-card-c" style={{ bottom: '16%', left: '5%',  opacity: 0.65, zIndex: 0 }} />
-        <FloatingCard rank="8" suit="clubs"    className="landing-card-d" style={{ bottom: '18%', right: '5%', opacity: 0.7,  zIndex: 0 }} />
-        <FloatingCard rank="Q" suit="hearts"   className="landing-card-e" style={{ top: '30%',  right: '0%',  opacity: 0.4,  zIndex: 0 }} />
-        <FloatingCard rank="J" suit="spades"   className="landing-card-f" style={{ top: '25%',  left: '0%',   opacity: 0.4,  zIndex: 0 }} />
-        <FloatingCard rank="7" suit="diamonds" className="landing-card-g" style={{ bottom: '30%', right: '2%', opacity: 0.3,  zIndex: 0 }} />
+        {/* Faint baccarat road grid in background */}
+        <MiniRoad style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%) rotate(-4deg)', opacity: 0.07, zIndex: 0, pointerEvents: 'none' }} />
+
+        {/* Floating road beads */}
+        <RoadBead outcome="B" size={48} className="landing-card-a" style={{ top: '8%',    left: '6%',   opacity: 0.65, zIndex: 0 }} />
+        <RoadBead outcome="P" size={38} className="landing-card-b" style={{ top: '5%',    right: '7%',  opacity: 0.6,  zIndex: 0 }} />
+        <RoadBead outcome="B" size={42} className="landing-card-c" style={{ bottom: '18%', left: '7%',  opacity: 0.55, zIndex: 0 }} />
+        <RoadBead outcome="P" size={50} className="landing-card-d" style={{ bottom: '20%', right: '6%', opacity: 0.6,  zIndex: 0 }} />
+        <RoadBead outcome="T" size={34} className="landing-card-e" style={{ top: '28%',   right: '2%',  opacity: 0.45, zIndex: 0 }} />
+        <RoadBead outcome="B" size={36} className="landing-card-f" style={{ top: '22%',   left: '2%',   opacity: 0.4,  zIndex: 0 }} />
+        <RoadBead outcome="P" size={30} className="landing-card-g" style={{ bottom: '32%', right: '3%', opacity: 0.35, zIndex: 0 }} />
 
         {/* Left chip tower */}
         <ChipTower values={[5, 1, 5, 20, 5, 1, 20]} style={{ position: 'absolute', left: '3%', bottom: '20%', opacity: 0.65, zIndex: 0 }} />
