@@ -3,11 +3,11 @@ import Link from 'next/link';
 
 // ─── Playing card ─────────────────────────────────────────────────────────────
 
-const SUITS: Record<string, { symbol: string; color: string }> = {
-  spades:   { symbol: '♠', color: '#1a1a2e' },
-  hearts:   { symbol: '♥', color: '#c0392b' },
-  diamonds: { symbol: '♦', color: '#c0392b' },
-  clubs:    { symbol: '♣', color: '#1a1a2e' },
+const SUITS: Record<string, { symbol: string; color: string; isRed: boolean }> = {
+  spades:   { symbol: '♠', color: '#111827', isRed: false },
+  hearts:   { symbol: '♥', color: '#c0392b', isRed: true  },
+  diamonds: { symbol: '♦', color: '#c0392b', isRed: true  },
+  clubs:    { symbol: '♣', color: '#111827', isRed: false },
 };
 
 function FloatingCard({
@@ -19,20 +19,45 @@ function FloatingCard({
   return (
     <div className={className} style={{
       position: 'absolute',
-      width: 58, height: 82,
-      background: 'linear-gradient(160deg, #fff 0%, #f5f0e8 100%)',
-      borderRadius: 8,
-      boxShadow: '0 10px 40px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.6)',
-      padding: '5px 6px',
-      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-      border: '1px solid rgba(255,255,255,0.85)',
+      width: 64, height: 90,
+      background: 'linear-gradient(170deg, #ffffff 0%, #f8f4ee 100%)',
+      borderRadius: 6,
+      boxShadow: '0 12px 40px rgba(0,0,0,0.9), 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.9)',
+      border: '1px solid #e8e0d0',
+      overflow: 'hidden',
       ...style,
     }}>
-      <div style={{ color: s.color, fontSize: 12, fontWeight: 900, lineHeight: 1, fontFamily: 'Georgia, serif' }}>
-        {rank}<br /><span style={{ fontSize: 13 }}>{s.symbol}</span>
+      {/* Top-left corner index */}
+      <div style={{
+        position: 'absolute', top: 4, left: 5,
+        color: s.color, fontFamily: 'Arial, sans-serif', lineHeight: 1,
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+      }}>
+        <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.03em' }}>{rank}</span>
+        <span style={{ fontSize: 11, marginTop: 0 }}>{s.symbol}</span>
       </div>
-      <div style={{ color: s.color, fontSize: 12, fontWeight: 900, lineHeight: 1, fontFamily: 'Georgia, serif', textAlign: 'right', transform: 'rotate(180deg)' }}>
-        {rank}<br /><span style={{ fontSize: 13 }}>{s.symbol}</span>
+
+      {/* Bottom-right corner index (upside-down) */}
+      <div style={{
+        position: 'absolute', bottom: 4, right: 5,
+        color: s.color, fontFamily: 'Arial, sans-serif', lineHeight: 1,
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        transform: 'rotate(180deg)',
+      }}>
+        <span style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.03em' }}>{rank}</span>
+        <span style={{ fontSize: 11, marginTop: 0 }}>{s.symbol}</span>
+      </div>
+
+      {/* Center pip */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{
+          color: s.color, fontSize: 28, lineHeight: 1,
+          opacity: 0.9,
+          textShadow: s.isRed ? '0 1px 4px rgba(192,57,43,0.25)' : '0 1px 4px rgba(0,0,0,0.15)',
+        }}>{s.symbol}</span>
       </div>
     </div>
   );
