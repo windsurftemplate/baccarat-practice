@@ -48,21 +48,26 @@ function isHardHand(playerHand: Card[], bankerHand: Card[]): boolean {
 }
 
 function dealFresh(shoe: Card[], hardOnly: boolean): { playerHand: Card[]; bankerHand: Card[]; shoe: Card[] } {
-  const base = shoe.length < 52 ? createShoe() : [...shoe];
-  for (let attempts = 0; attempts < 300; attempts++) {
-    // Reset shoe each attempt so we never deplete it
-    let s = [...base];
-    const take = (): Card => { const r = drawCard(s); s = r.remainingShoe; return r.card; };
-    const playerHand = [take(), take()];
-    const bankerHand = [take(), take()];
+  // Advance through the shoe linearly so we see different cards on each attempt.
+  // (The old code did `let s = [...base]` inside the loop, which always reset to
+  // the same 4 cards — causing infinite recursion whenever those cards were a natural.)
+  let s = shoe.length < 4 ? createShoe() : [...shoe];
+  for (let attempts = 0; attempts < 500; attempts++) {
+    if (s.length < 4) s = createShoe();
+    const playerHand = [s[0], s[1]];
+    const bankerHand = [s[2], s[3]];
+    s = s.slice(4);
     const pT = handTotal(playerHand);
     const bT = handTotal(bankerHand);
     if (pT >= 8 || bT >= 8) continue; // skip naturals
     if (hardOnly && !isHardHand(playerHand, bankerHand)) continue;
     return { playerHand, bankerHand, shoe: s };
   }
-  // fallback: deal without hard filter
-  return dealFresh(shoe, false);
+  // hardOnly exhausted — retry without hard filter
+  if (hardOnly) return dealFresh(s, false);
+  // Statistically impossible to reach here; guarantee a result with a fresh shoe
+  const fresh = createShoe();
+  return { playerHand: [fresh[0], fresh[1]], bankerHand: [fresh[2], fresh[3]], shoe: fresh.slice(4) };
 }
 
 function playerExplanation(pTotal: number, shouldDraw: boolean): string {
