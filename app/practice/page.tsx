@@ -57,6 +57,17 @@ const DRILLS = [
     icon: '💰',
     tags: ['Math', 'Side Bets'],
   },
+  {
+    href: '/practice/bonus-math',
+    title: 'Bonus Math Trainer',
+    subtitle: 'Learn the system',
+    description: 'Build mental speed for bonus payouts. Each round shows the shortcut (e.g. ×40 = ×4 add a zero) then reveals the step-by-step breakdown.',
+    color: '#7c3aed',
+    glow: 'rgba(139,92,246,0.5)',
+    border: 'rgba(196,181,253,0.4)',
+    icon: '🧮',
+    tags: ['Speed', 'Bonus', 'System'],
+  },
 ];
 
 export default function PracticeHub() {
