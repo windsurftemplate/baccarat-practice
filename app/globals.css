@@ -281,6 +281,12 @@ body {
 .spin-ring-cw  { animation: spinCW  28s linear infinite; }
 .spin-ring-ccw { animation: spinCCW 42s linear infinite; }
 
+@keyframes chipFall {
+  0%   { transform: translateY(-80px) rotate(-20deg) scale(0.7); opacity: 0; }
+  8%   { transform: translateY(10px)  rotate(15deg)  scale(1.05); opacity: 1; }
+  100% { transform: translateY(115vh) rotate(600deg) scale(0.85); opacity: 0; }
+}
+
 .shimmer-gold {
   background: linear-gradient(90deg, #c8a44a 0%, #fff8dc 40%, #e8c86a 60%, #c8a44a 100%);
   background-size: 200% auto;

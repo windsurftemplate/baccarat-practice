@@ -1,5 +1,7 @@
 'use client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
 
 // ─── Playing card ────────────────────────────────────────────────────────────
 
@@ -141,6 +143,26 @@ function ChipTower({ values, style }: { values: number[]; style?: React.CSSPrope
   );
 }
 
+// ─── Chip-fall transition ─────────────────────────────────────────────────────
+
+const FALL_CHIPS: Array<{ value: number; left: string; delay: string; dur: string }> = [
+  { value: 100, left:  '4%', delay:   '0ms', dur: '620ms' },
+  { value:   5, left: '13%', delay:  '55ms', dur: '670ms' },
+  { value:  20, left: '22%', delay:  '20ms', dur: '645ms' },
+  { value:   1, left: '32%', delay:  '80ms', dur: '700ms' },
+  { value:   5, left: '42%', delay:  '10ms', dur: '635ms' },
+  { value: 100, left: '52%', delay:  '65ms', dur: '660ms' },
+  { value:  20, left: '62%', delay:  '30ms', dur: '690ms' },
+  { value:   1, left: '72%', delay:  '75ms', dur: '640ms' },
+  { value:   5, left: '82%', delay:  '15ms', dur: '670ms' },
+  { value: 100, left: '91%', delay:  '45ms', dur: '650ms' },
+  { value:   1, left:  '8%', delay: '120ms', dur: '665ms' },
+  { value:  20, left: '27%', delay: '140ms', dur: '635ms' },
+  { value:   5, left: '47%', delay: '110ms', dur: '680ms' },
+  { value: 100, left: '67%', delay: '135ms', dur: '650ms' },
+  { value:   1, left: '87%', delay: '155ms', dur: '620ms' },
+];
+
 // ─── Drills ───────────────────────────────────────────────────────────────────
 
 const DRILLS = [
@@ -155,6 +177,16 @@ const DRILLS = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const router = useRouter();
+  const [falling, setFalling] = useState(false);
+
+  const handleDrillClick = useCallback((e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    if (falling) return;
+    setFalling(true);
+    setTimeout(() => router.push(href), 780);
+  }, [falling, router]);
+
   return (
     <div style={{
       background: '#060a0e',
@@ -371,7 +403,7 @@ export default function LandingPage() {
         {/* Drill grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {DRILLS.map(d => (
-            <Link key={d.href} href={d.href} style={{
+            <Link key={d.href} href={d.href} onClick={e => handleDrillClick(e, d.href)} style={{
               textDecoration: 'none',
               display: 'flex', alignItems: 'center', gap: 10,
               background: 'linear-gradient(135deg, rgba(200,164,74,0.07) 0%, rgba(0,0,0,0.3) 100%)',
@@ -393,6 +425,20 @@ export default function LandingPage() {
             </Link>
           ))}
         </div>
+
+        {/* Chip-fall transition overlay */}
+        {falling && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, overflow: 'hidden', background: 'rgba(4,6,10,0.88)', pointerEvents: 'all' }}>
+            {FALL_CHIPS.map((fc, i) => (
+              <div key={i} style={{
+                position: 'absolute', left: fc.left, top: '-70px',
+                animation: `chipFall ${fc.dur} ${fc.delay} ease-in forwards`,
+              }}>
+                <Chip value={fc.value} size={46} />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Chip row decoration */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: -6, marginTop: 22, opacity: 0.4 }}>
