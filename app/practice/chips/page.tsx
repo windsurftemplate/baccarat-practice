@@ -217,23 +217,22 @@ interface Stats { correct: number; total: number; streak: number; bestStreak: nu
 const emptyStats = (): Stats => ({ correct: 0, total: 0, streak: 0, bestStreak: 0 });
 type AnswerState = { selected: number; correct: boolean } | null;
 
+function freshRound(streak: number) {
+  const s = generateScenario(streak);
+  const lvl = getLevel(streak);
+  return { scenario: s, options: makeOptions(s.total, s.stacks, lvl.numOptions) };
+}
+
 export default function ChipsDrill() {
   const [stats, setStats] = useState<Stats>(emptyStats);
-  const [scenario, setScenario] = useState(() => generateScenario(0));
-  const [options, setOptions] = useState<number[]>(() => {
-    const s = generateScenario(0);
-    return makeOptions(s.total, s.stacks, LEVELS[0].numOptions);
-  });
+  const [{ scenario, options }, setRound] = useState(() => freshRound(0));
   const [answer, setAnswer] = useState<AnswerState>(null);
 
   const { stacks, total } = scenario;
   const lvl = getLevel(stats.streak);
 
   function nextScenario(newStreak: number) {
-    const s = generateScenario(newStreak);
-    const lvlNow = getLevel(newStreak);
-    setScenario(s);
-    setOptions(makeOptions(s.total, s.stacks, lvlNow.numOptions));
+    setRound(freshRound(newStreak));
     setAnswer(null);
   }
 
@@ -250,9 +249,6 @@ export default function ChipsDrill() {
   }
 
   const pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
-
-  // Ensure options always contain the correct answer
-  const displayOptions = options.includes(total) ? options : makeOptions(total, stacks, lvl.numOptions);
 
   // Layout: 2 or 4 columns depending on numOptions
   const cols = lvl.numOptions <= 4 ? 2 : lvl.numOptions === 6 ? 3 : 4;
@@ -325,7 +321,7 @@ export default function ChipsDrill() {
           width: '100%',
           maxWidth: cols === 4 ? 380 : 320,
         }}>
-          {displayOptions.map(opt => {
+          {options.map(opt => {
             const isSelected = answer?.selected === opt;
             const isCorrectOpt = opt === total;
             let bg = 'rgba(255,255,255,0.06)';
