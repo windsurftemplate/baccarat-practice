@@ -215,7 +215,7 @@ export default function LandingPage() {
             position: 'relative',
             border: '1px solid rgba(200,164,74,0.22)',
             borderRadius: 4,
-            padding: '20px 28px 16px',
+            padding: '20px 16px 16px',
             background: 'rgba(0,0,0,0.45)',
             backdropFilter: 'blur(6px)',
             animation: 'fadeInUp 0.5s ease 0.1s both',
@@ -231,17 +231,10 @@ export default function LandingPage() {
             ))}
 
             <h1 style={{ margin: 0, lineHeight: 1 }}>
-              <span className="shimmer-gold" style={{ fontSize: 50, fontWeight: 900, letterSpacing: '0.1em', display: 'block' }}>
+              <span className="shimmer-gold" style={{ fontSize: 46, fontWeight: 900, letterSpacing: '0.06em', display: 'block' }}>
                 BACCARAT
               </span>
             </h1>
-
-            {/* Punto Banco sub-line */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, justifyContent: 'center' }}>
-              <div style={{ height: 1, flex: 1, background: 'rgba(200,164,74,0.3)' }} />
-              <span style={{ color: 'rgba(200,164,74,0.65)', fontSize: 10, fontWeight: 700, letterSpacing: '0.45em' }}>PUNTO BANCO</span>
-              <div style={{ height: 1, flex: 1, background: 'rgba(200,164,74,0.3)' }} />
-            </div>
           </div>
 
           {/* Tagline */}
