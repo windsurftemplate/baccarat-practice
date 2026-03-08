@@ -554,6 +554,14 @@ export default function ThirdCardDrill() {
           </div>
         </div>
 
+        {/* Card counter (clock mode) */}
+        {mode === 'clock' && clockStarted && !clockFinished && (
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+            <span style={{ color: '#fbbf24', fontSize: 28, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{cardsConsumed}</span>
+            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 14, fontWeight: 700 }}>/ {DECK_CARDS} cards</span>
+          </div>
+        )}
+
         {/* Cards */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 16, width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,0,0,0.5)', borderRadius: 16, padding: '12px 12px', flex: '0 0 auto' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
