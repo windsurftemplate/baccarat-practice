@@ -43,7 +43,8 @@ type DrillAction =
 function isHardHand(playerHand: Card[], bankerHand: Card[]): boolean {
   const pTotal = handTotal(playerHand);
   const bTotal = handTotal(bankerHand);
-  // "Hard" = banker has 3-6 AND player will draw (so player third card matters)
+  // Naturals (8-9) are already excluded by dealFresh before this runs.
+  // "Hard" = player draws (0-5) AND banker decision is conditional on player's 3rd card (3-6).
   return pTotal <= 5 && bTotal >= 3 && bTotal <= 6;
 }
 
