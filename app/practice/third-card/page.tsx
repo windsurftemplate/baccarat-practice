@@ -351,7 +351,8 @@ export default function ThirdCardDrill() {
     if (outcome.winner === 'tie') return 'tie';
     if (outcome.winner === 'banker' && bankerHand.length === 3 && handTotal(bankerHand) === 7) return 'dragon7';
     if (outcome.winner === 'player' && playerHand.length === 3 && handTotal(playerHand) === 8) return 'panda8';
-    if (outcome.winner === 'banker' && bankerHand.length === 3) return 'ruby';
+    // Ruby = banker wins with 3 cards, total 1–6 (not Dragon 7, not 8 or 9)
+    if (outcome.winner === 'banker' && bankerHand.length === 3 && handTotal(bankerHand) <= 6) return 'ruby';
     return 'none';
   })();
   const isPlayerTurn = phase === 'player-decision';
