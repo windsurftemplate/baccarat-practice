@@ -304,7 +304,7 @@ export default function ThirdCardDrill() {
   }, [mode, state.phase, outcomeSelected, state.playerHand, state.bankerHand, clearTimer, dispatch]);
 
   // Reset outcome selection on new hand
-  useEffect(() => { if (phase === 'player-decision') setOutcomeSelected(null); }, [phase]);
+  useEffect(() => { if (state.phase === 'player-decision') setOutcomeSelected(null); }, [state.phase]);
 
   // Clock: reset when leaving clock mode
   useEffect(() => {
