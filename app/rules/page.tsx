@@ -49,8 +49,8 @@ const PAYOUTS = [
   { bet: 'Tie', payout: '9 : 1', note: 'Player & Banker bets returned' },
   { bet: 'Dragon 7', payout: '40 : 1', note: 'Banker wins with 3-card 7' },
   { bet: 'Panda 8', payout: '25 : 1', note: 'Player wins with 3-card 8' },
-  { bet: 'Small Ruby', payout: '10 : 1', note: 'Banker wins with 3 cards' },
-  { bet: 'Big Ruby', payout: '75 : 1', note: 'Specific 3-card banker win' },
+  { bet: 'Small Ruby', payout: '10 : 1', note: 'Either side has a 3-card total of 9' },
+  { bet: 'Big Ruby', payout: '75 : 1', note: 'Both sides have a 3-card total of 9' },
 ];
 
 export default function RulesPage() {
@@ -180,8 +180,8 @@ export default function RulesPage() {
             <div style={{ background: 'rgba(244,114,182,0.08)', border: '1px solid rgba(244,114,182,0.3)', borderRadius: 10, padding: '10px 14px' }}>
               <div style={{ color: '#f472b6', fontWeight: 900, fontSize: 13, marginBottom: 3 }}>💎 Ruby</div>
               <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11 }}>
-                <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Small Ruby (10:1)</strong> — Banker wins with 3 cards (any total, not Dragon 7).<br />
-                <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Big Ruby (75:1)</strong> — Specific qualifying 3-card Banker win.
+                <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Small Ruby (10:1)</strong> — Either side has a 3-card total of 9.<br />
+                <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Big Ruby (75:1)</strong> — Both sides have a 3-card total of 9.
               </div>
             </div>
             <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: 10, padding: '10px 14px' }}>

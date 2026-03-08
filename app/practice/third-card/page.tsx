@@ -348,11 +348,17 @@ export default function ThirdCardDrill() {
   const outcome = phase === 'result' ? determineOutcome(playerHand, bankerHand) : null;
   const correctOutcome = (() => {
     if (!outcome) return 'none';
-    if (outcome.winner === 'tie') return 'tie';
+    // Dragon 7: banker wins with 3-card total of 7
     if (outcome.winner === 'banker' && bankerHand.length === 3 && handTotal(bankerHand) === 7) return 'dragon7';
+    // Panda 8: player wins with 3-card total of 8
     if (outcome.winner === 'player' && playerHand.length === 3 && handTotal(playerHand) === 8) return 'panda8';
-    // Ruby = banker wins with 3 cards, total 1–6 (not Dragon 7, not 8 or 9)
-    if (outcome.winner === 'banker' && bankerHand.length === 3 && handTotal(bankerHand) <= 6) return 'ruby';
+    // Ruby: either side (or both) has a 3-card total of 9
+    // Small Ruby (10:1) = one side; Big Ruby (75:1) = both sides
+    const p9 = playerHand.length === 3 && handTotal(playerHand) === 9;
+    const b9 = bankerHand.length === 3 && handTotal(bankerHand) === 9;
+    if (p9 || b9) return 'ruby';
+    // Tie
+    if (outcome.winner === 'tie') return 'tie';
     return 'none';
   })();
   const isPlayerTurn = phase === 'player-decision';

@@ -42,7 +42,8 @@ If no Natural:
 |---|---|
 | Dragon 7 | Banker wins with a 3-card total of exactly 7 |
 | Panda 8 | Player wins with a 3-card total of exactly 8 |
-| Ruby | Banker wins with 3 cards (any total other than Dragon 7) |
+| Small Ruby | Either side has a 3-card total of 9 (10:1) |
+| Big Ruby | Both sides have a 3-card total of 9 (75:1) |
 | Tie | Both hands have the same total |
 
 ---
