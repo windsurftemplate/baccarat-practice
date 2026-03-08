@@ -82,7 +82,8 @@ export default function PracticeHub() {
         <div className="text-xs font-bold tracking-widest uppercase" style={{ color: '#e8c86a', letterSpacing: '0.2em' }}>
           ♦ Practice Drills ♦
         </div>
-        <div style={{ width: 52 }} />
+        <Link href="/rules" className="text-xs font-bold tracking-widest uppercase"
+          style={{ color: 'rgba(232,200,106,0.6)' }}>Rules</Link>
       </div>
 
       {/* Drill grid */}
