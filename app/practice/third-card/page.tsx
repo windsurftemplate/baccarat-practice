@@ -280,21 +280,27 @@ export default function ThirdCardDrill() {
 
   useEffect(() => {
     clearTimer();
-    if (mode !== 'timed' || state.phase === 'result') { setTimeLeft(TIMER_SECONDS); return; }
+    if (mode !== 'timed') { setTimeLeft(TIMER_SECONDS); return; }
+    // Stop timer once outcome is chosen
+    if (state.phase === 'result' && outcomeSelected) { setTimeLeft(TIMER_SECONDS); return; }
     setTimeLeft(TIMER_SECONDS);
     timerRef.current = setInterval(() => {
       setTimeLeft(t => {
         if (t <= 1) {
           clearTimer();
-          // Time out = wrong answer (stand when should have answered)
-          dispatch({ type: 'ANSWER', hit: false });
+          if (state.phase === 'result') {
+            // Timeout on outcome selection = mark as wrong
+            setOutcomeSelected('__timeout__');
+          } else {
+            dispatch({ type: 'ANSWER', hit: false });
+          }
           return TIMER_SECONDS;
         }
         return t - 1;
       });
     }, 1000);
     return clearTimer;
-  }, [mode, state.phase, state.playerHand, state.bankerHand, clearTimer, dispatch]);
+  }, [mode, state.phase, outcomeSelected, state.playerHand, state.bankerHand, clearTimer, dispatch]);
 
   // Reset outcome selection on new hand
   useEffect(() => { if (phase === 'player-decision') setOutcomeSelected(null); }, [phase]);
@@ -474,7 +480,7 @@ export default function ThirdCardDrill() {
       )}
 
       {/* Timer bar */}
-      {mode === 'timed' && !isResult && (
+      {mode === 'timed' && !(isResult && outcomeSelected) && (
         <div style={{ height: 5, background: 'rgba(0,0,0,0.4)' }}>
           <div style={{
             height: '100%',
@@ -609,7 +615,9 @@ export default function ThirdCardDrill() {
           )}
           {isResult && !outcomeSelected && (
             <>
-              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textAlign: 'center', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Identify the outcome</div>
+              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textAlign: 'center', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                {mode === 'timed' ? `⏱ ${timeLeft}s — Identify the outcome` : 'Identify the outcome'}
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {OUTCOME_BTNS.map(btn => (
                   <button key={btn.key} onClick={() => setOutcomeSelected(btn.key)} style={{
@@ -636,7 +644,9 @@ export default function ThirdCardDrill() {
                 <span style={{ color: outcomeSelected === correctOutcome ? '#4ade80' : '#f87171', fontSize: 12, fontWeight: 900 }}>
                   {outcomeSelected === correctOutcome
                     ? '✓ Correct!'
-                    : `✗ Was: ${OUTCOME_BTNS.find(b => b.key === correctOutcome)?.label ?? 'No Special Outcome'}`}
+                    : outcomeSelected === '__timeout__'
+                      ? `⏱ Time! Was: ${OUTCOME_BTNS.find(b => b.key === correctOutcome)?.label ?? 'No Special Outcome'}`
+                      : `✗ Was: ${OUTCOME_BTNS.find(b => b.key === correctOutcome)?.label ?? 'No Special Outcome'}`}
                 </span>
               </div>
               <button style={{ width: '100%', height: 64, fontSize: 17, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', borderRadius: 16, background: '#7a1826', color: '#fff', border: '1px solid rgba(200,80,100,0.5)', boxShadow: '0 0 20px rgba(122,24,38,0.5)', cursor: 'pointer', touchAction: 'manipulation' }}
