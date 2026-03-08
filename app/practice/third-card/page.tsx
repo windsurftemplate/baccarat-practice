@@ -240,6 +240,13 @@ function HeatmapView({ heatmap }: { heatmap: DrillStats['heatmap'] }) {
 const TIMER_SECONDS = 5;
 const STREAK_TIERS = [10, 25, 50];
 
+const OUTCOME_BTNS = [
+  { key: 'dragon7', label: '🐉 Dragon 7', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.45)' },
+  { key: 'panda8',  label: '🐼 Panda 8',  color: '#4ade80', bg: 'rgba(74,222,128,0.12)', border: 'rgba(74,222,128,0.45)' },
+  { key: 'ruby',    label: '💎 Ruby',      color: '#f472b6', bg: 'rgba(244,114,182,0.12)', border: 'rgba(244,114,182,0.45)' },
+  { key: 'tie',     label: 'Tie',          color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.45)' },
+];
+
 export default function ThirdCardDrill() {
   const [mode, setMode] = useState<DrillMode>('normal');
   const [showStats, setShowStats] = useState(false);
@@ -265,6 +272,7 @@ export default function ThirdCardDrill() {
   const [shoeStartSize, setShoeStartSize] = useState(0);
   const clockRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const DECK_CARDS = 52;
+  const [outcomeSelected, setOutcomeSelected] = useState<string | null>(null);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -287,6 +295,9 @@ export default function ThirdCardDrill() {
     }, 1000);
     return clearTimer;
   }, [mode, state.phase, state.playerHand, state.bankerHand, clearTimer, dispatch]);
+
+  // Reset outcome selection on new hand
+  useEffect(() => { if (phase === 'player-decision') setOutcomeSelected(null); }, [phase]);
 
   // Clock: reset when leaving clock mode
   useEffect(() => {
@@ -328,6 +339,14 @@ export default function ThirdCardDrill() {
   const { playerHand, bankerHand, phase, playerResult, bankerResult, stats } = state;
 
   const outcome = phase === 'result' ? determineOutcome(playerHand, bankerHand) : null;
+  const correctOutcome = (() => {
+    if (!outcome) return 'none';
+    if (outcome.winner === 'tie') return 'tie';
+    if (outcome.winner === 'banker' && bankerHand.length === 3 && handTotal(bankerHand) === 7) return 'dragon7';
+    if (outcome.winner === 'player' && playerHand.length === 3 && handTotal(playerHand) === 8) return 'panda8';
+    if (outcome.winner === 'banker' && bankerHand.length === 3) return 'ruby';
+    return 'none';
+  })();
   const isPlayerTurn = phase === 'player-decision';
   const isBankerTurn = phase === 'banker-decision';
   const isResult = phase === 'result';
@@ -580,11 +599,43 @@ export default function ThirdCardDrill() {
                 onClick={() => dispatch({ type: 'ANSWER', hit: false })}>STAND</button>
             </div>
           )}
-          {isResult && (
-            <button style={{ width: '100%', height: 64, fontSize: 17, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', borderRadius: 16, background: '#7a1826', color: '#fff', border: '1px solid rgba(200,80,100,0.5)', boxShadow: '0 0 20px rgba(122,24,38,0.5)', cursor: 'pointer', touchAction: 'manipulation' }}
-              onClick={() => dispatch({ type: 'NEXT_HAND' })}>
-              Next Hand →
-            </button>
+          {isResult && !outcomeSelected && (
+            <>
+              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textAlign: 'center', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Identify the outcome</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {OUTCOME_BTNS.map(btn => (
+                  <button key={btn.key} onClick={() => setOutcomeSelected(btn.key)} style={{
+                    height: 54, fontSize: 13, fontWeight: 900, borderRadius: 12,
+                    background: btn.bg, color: btn.color, border: `1.5px solid ${btn.border}`,
+                    cursor: 'pointer', touchAction: 'manipulation',
+                  }}>{btn.label}</button>
+                ))}
+              </div>
+              <button onClick={() => setOutcomeSelected('none')} style={{
+                width: '100%', height: 42, fontSize: 12, fontWeight: 700, borderRadius: 12,
+                background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)',
+                border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', touchAction: 'manipulation',
+              }}>No Special Outcome</button>
+            </>
+          )}
+          {isResult && outcomeSelected && (
+            <>
+              <div style={{
+                textAlign: 'center', padding: '8px 12px', borderRadius: 10,
+                background: outcomeSelected === correctOutcome ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.15)',
+                border: `1px solid ${outcomeSelected === correctOutcome ? 'rgba(74,222,128,0.4)' : 'rgba(248,113,113,0.4)'}`,
+              }}>
+                <span style={{ color: outcomeSelected === correctOutcome ? '#4ade80' : '#f87171', fontSize: 12, fontWeight: 900 }}>
+                  {outcomeSelected === correctOutcome
+                    ? '✓ Correct!'
+                    : `✗ Was: ${OUTCOME_BTNS.find(b => b.key === correctOutcome)?.label ?? 'No Special Outcome'}`}
+                </span>
+              </div>
+              <button style={{ width: '100%', height: 64, fontSize: 17, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', borderRadius: 16, background: '#7a1826', color: '#fff', border: '1px solid rgba(200,80,100,0.5)', boxShadow: '0 0 20px rgba(122,24,38,0.5)', cursor: 'pointer', touchAction: 'manipulation' }}
+                onClick={() => dispatch({ type: 'NEXT_HAND' })}>
+                Next Hand →
+              </button>
+            </>
           )}
         </div>
       </div>
