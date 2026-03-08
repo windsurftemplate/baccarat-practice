@@ -7,7 +7,7 @@ import CardView from '../../../components/Card';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type DrillMode = 'normal' | 'timed' | 'streak' | 'hard';
+type DrillMode = 'normal' | 'timed' | 'streak' | 'hard' | 'clock';
 type DrillPhase = 'player-decision' | 'banker-decision' | 'result';
 
 interface DecisionResult { correct: boolean; message: string; }
@@ -258,6 +258,14 @@ export default function ThirdCardDrill() {
   const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Deck clock state
+  const [clockStarted, setClockStarted] = useState(false);
+  const [clockFinished, setClockFinished] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [shoeStartSize, setShoeStartSize] = useState(0);
+  const clockRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const DECK_CARDS = 52;
+
   const clearTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
   }, []);
@@ -279,6 +287,43 @@ export default function ThirdCardDrill() {
     }, 1000);
     return clearTimer;
   }, [mode, state.phase, state.playerHand, state.bankerHand, clearTimer, dispatch]);
+
+  // Clock: reset when leaving clock mode
+  useEffect(() => {
+    if (mode !== 'clock') {
+      if (clockRef.current) { clearInterval(clockRef.current); clockRef.current = null; }
+      setClockStarted(false);
+      setClockFinished(false);
+      setElapsed(0);
+    }
+  }, [mode]);
+
+  // Clock: stop when one deck consumed
+  const cardsConsumed = clockStarted && shoeStartSize > 0 ? shoeStartSize - state.shoe.length : 0;
+  useEffect(() => {
+    if (mode !== 'clock' || !clockStarted || clockFinished) return;
+    if (cardsConsumed >= DECK_CARDS) {
+      if (clockRef.current) { clearInterval(clockRef.current); clockRef.current = null; }
+      setClockFinished(true);
+    }
+  }, [cardsConsumed, mode, clockStarted, clockFinished]);
+
+  function startClock() {
+    dispatch({ type: 'RESET_STATS' });
+    dispatch({ type: 'NEXT_HAND' });
+    setElapsed(0);
+    setClockFinished(false);
+    setShoeStartSize(state.shoe.length);
+    setClockStarted(true);
+    if (clockRef.current) clearInterval(clockRef.current);
+    clockRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
+  }
+
+  function formatElapsed(sec: number): string {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
 
   const { playerHand, bankerHand, phase, playerResult, bankerResult, stats } = state;
 
@@ -319,17 +364,17 @@ export default function ThirdCardDrill() {
       </div>
 
       {/* Mode tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.3)' }}>
-        {(['normal', 'timed', 'streak', 'hard'] as DrillMode[]).map(m => (
+      <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.3)', overflowX: 'auto' }}>
+        {(['normal', 'timed', 'streak', 'hard', 'clock'] as DrillMode[]).map(m => (
           <button key={m} onClick={() => setMode(m)} style={{
-            flex: 1, padding: '7px 4px', fontSize: 10, fontWeight: 800, letterSpacing: '0.06em',
+            flexShrink: 0, flex: 1, padding: '7px 4px', fontSize: 10, fontWeight: 800, letterSpacing: '0.06em',
             textTransform: 'uppercase', cursor: 'pointer', touchAction: 'manipulation', border: 'none',
             background: mode === m ? 'rgba(122,24,38,0.5)' : 'transparent',
             color: mode === m ? '#f5f0e8' : 'rgba(255,255,255,0.3)',
             borderBottom: mode === m ? '2px solid #f87171' : '2px solid transparent',
             transition: 'all 0.15s',
           }}>
-            {m === 'normal' ? 'Normal' : m === 'timed' ? '⏱ Timed' : m === 'streak' ? '🔥 Streak' : '💀 Hard'}
+            {m === 'normal' ? 'Normal' : m === 'timed' ? '⏱ Timed' : m === 'streak' ? '🔥 Streak' : m === 'hard' ? '💀 Hard' : '🕐 Clock'}
           </button>
         ))}
       </div>
@@ -381,6 +426,34 @@ export default function ThirdCardDrill() {
         </div>
       )}
 
+      {/* Deck clock bar */}
+      {mode === 'clock' && clockStarted && !clockFinished && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '6px 16px', background: 'rgba(0,0,0,0.55)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ color: '#fbbf24', fontSize: 22, fontWeight: 900, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>
+              {formatElapsed(elapsed)}
+            </span>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em' }}>elapsed</span>
+          </div>
+          <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, margin: '0 14px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 2,
+              width: `${Math.min(100, (cardsConsumed / DECK_CARDS) * 100)}%`,
+              background: 'linear-gradient(90deg, #fbbf24, #f59e0b)',
+              transition: 'width 0.3s',
+            }} />
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 900 }}>{cardsConsumed}<span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>/{DECK_CARDS}</span></div>
+            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9, textTransform: 'uppercase' }}>cards</div>
+          </div>
+        </div>
+      )}
+
       {/* Timer bar */}
       {mode === 'timed' && !isResult && (
         <div style={{ height: 5, background: 'rgba(0,0,0,0.4)' }}>
@@ -394,7 +467,60 @@ export default function ThirdCardDrill() {
       )}
 
       {/* Felt */}
-      <div className="flex-1 felt flex flex-col items-center gap-3 py-3 px-4 overflow-hidden min-h-0">
+      <div className="flex-1 felt flex flex-col items-center gap-3 py-3 px-4 overflow-hidden min-h-0" style={{ position: 'relative' }}>
+
+        {/* Clock: START screen */}
+        {mode === 'clock' && !clockStarted && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 10,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(8,10,14,0.92)', gap: 20,
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#e8c86a', fontSize: 13, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8 }}>🕐 Deck Clock</div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, lineHeight: 1.7 }}>
+                Timer starts when you press START.<br />
+                Play through <span style={{ color: '#fbbf24', fontWeight: 900 }}>52 cards</span> (~8–13 hands).<br />
+                Clock stops automatically when done.
+              </div>
+            </div>
+            <button onClick={startClock} style={{
+              padding: '18px 52px', fontSize: 20, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase',
+              borderRadius: 16, background: 'linear-gradient(160deg, #7a1826, #9a1e30)',
+              color: '#fff', border: '2px solid rgba(220,100,120,0.6)',
+              boxShadow: '0 0 30px rgba(122,24,38,0.6)', cursor: 'pointer', touchAction: 'manipulation',
+            }}>
+              START
+            </button>
+          </div>
+        )}
+
+        {/* Clock: FINISHED screen */}
+        {mode === 'clock' && clockFinished && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 10,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(8,10,14,0.93)', gap: 16,
+          }}>
+            <div style={{ color: '#e8c86a', fontSize: 13, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Deck Complete!</div>
+            <div style={{ fontSize: 52, fontWeight: 900, color: '#fbbf24', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.06em' }}>
+              {formatElapsed(elapsed)}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: '14px 24px', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <StatRow label="Hands" value={String(stats.handsPlayed)} />
+              <StatRow label="Accuracy" value={stats.handsPlayed > 0 ? `${Math.round((stats.handsCorrect / stats.handsPlayed) * 100)}%` : '—'} color="#4ade80" />
+              <StatRow label="Player Errors" value={String(stats.playerErrors)} color="#93c5fd" />
+              <StatRow label="Banker Errors" value={String(stats.bankerErrors)} color="#fca5a5" />
+            </div>
+            <button onClick={startClock} style={{
+              padding: '14px 40px', fontSize: 15, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
+              borderRadius: 14, background: '#7a1826', color: '#fff', border: '2px solid rgba(220,100,120,0.5)',
+              boxShadow: '0 0 20px rgba(122,24,38,0.5)', cursor: 'pointer', touchAction: 'manipulation',
+            }}>
+              Try Again
+            </button>
+          </div>
+        )}
 
         {/* Phase banner */}
         <div style={{ width: '100%', textAlign: 'center' }}>
@@ -410,18 +536,17 @@ export default function ThirdCardDrill() {
         </div>
 
         {/* Cards */}
-        <div className="flex justify-around items-start w-full rounded-2xl py-3 px-3"
-          style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,0,0,0.5)', flex: '0 0 auto' }}>
-          <div className="flex flex-col items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 16, width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,0,0,0.5)', borderRadius: 16, padding: '12px 12px', flex: '0 0 auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <div style={{ color: '#fca5a5', fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)', borderRadius: 5, padding: '2px 10px', textTransform: 'uppercase' }}>Banker</div>
-            <div style={{ display: 'flex', gap: 2 }}>
+            <div style={{ display: 'flex', gap: -4 }}>
               {bankerHand.map((card, i) => <CardView key={i} card={card} delay={i * 120} />)}
             </div>
           </div>
-          <div style={{ paddingTop: 55, color: 'rgba(255,255,255,0.18)', fontSize: 18 }}>VS</div>
-          <div className="flex flex-col items-center gap-2">
+          <div style={{ paddingTop: 50, color: 'rgba(255,255,255,0.18)', fontSize: 16, flexShrink: 0 }}>VS</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <div style={{ color: '#93c5fd', fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', background: 'rgba(37,99,235,0.2)', border: '1px solid rgba(37,99,235,0.4)', borderRadius: 5, padding: '2px 10px', textTransform: 'uppercase' }}>Player</div>
-            <div style={{ display: 'flex', gap: 2 }}>
+            <div style={{ display: 'flex', gap: -4 }}>
               {playerHand.map((card, i) => <CardView key={i} card={card} delay={i * 120} />)}
             </div>
           </div>
