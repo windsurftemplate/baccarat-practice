@@ -270,9 +270,8 @@ export default function ThirdCardDrill() {
   const [clockStarted, setClockStarted] = useState(false);
   const [clockFinished, setClockFinished] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [shoeStartSize, setShoeStartSize] = useState(0);
   const clockRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const DECK_CARDS = 52;
+  const CLOCK_HANDS = 10;
   const [outcomeSelected, setOutcomeSelected] = useState<string | null>(null);
 
   const clearTimer = useCallback(() => {
@@ -316,22 +315,20 @@ export default function ThirdCardDrill() {
     }
   }, [mode]);
 
-  // Clock: stop when one deck consumed
-  const cardsConsumed = clockStarted && shoeStartSize > 0 ? shoeStartSize - state.shoe.length : 0;
+  // Clock: stop after CLOCK_HANDS hands
   useEffect(() => {
     if (mode !== 'clock' || !clockStarted || clockFinished) return;
-    if (cardsConsumed >= DECK_CARDS) {
+    if (state.stats.handsPlayed >= CLOCK_HANDS) {
       if (clockRef.current) { clearInterval(clockRef.current); clockRef.current = null; }
       setClockFinished(true);
     }
-  }, [cardsConsumed, mode, clockStarted, clockFinished]);
+  }, [state.stats.handsPlayed, mode, clockStarted, clockFinished]);
 
   function startClock() {
     dispatch({ type: 'RESET_STATS' });
     dispatch({ type: 'NEXT_HAND' });
     setElapsed(0);
     setClockFinished(false);
-    setShoeStartSize(state.shoe.length);
     setClockStarted(true);
     if (clockRef.current) clearInterval(clockRef.current);
     clockRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
@@ -475,14 +472,14 @@ export default function ThirdCardDrill() {
           <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, margin: '0 14px', overflow: 'hidden' }}>
             <div style={{
               height: '100%', borderRadius: 2,
-              width: `${Math.min(100, (cardsConsumed / DECK_CARDS) * 100)}%`,
+              width: `${Math.min(100, (state.stats.handsPlayed / CLOCK_HANDS) * 100)}%`,
               background: 'linear-gradient(90deg, #fbbf24, #f59e0b)',
               transition: 'width 0.3s',
             }} />
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 900 }}>{cardsConsumed}<span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>/{DECK_CARDS}</span></div>
-            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9, textTransform: 'uppercase' }}>cards</div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 900 }}>{state.stats.handsPlayed}<span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>/{CLOCK_HANDS}</span></div>
+            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9, textTransform: 'uppercase' }}>hands</div>
           </div>
         </div>
       )}
@@ -513,7 +510,7 @@ export default function ThirdCardDrill() {
               <div style={{ color: '#e8c86a', fontSize: 13, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8 }}>🕐 Deck Clock</div>
               <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, lineHeight: 1.7 }}>
                 Timer starts when you press START.<br />
-                Play through <span style={{ color: '#fbbf24', fontWeight: 900 }}>52 cards</span> (~8–13 hands).<br />
+                Play through <span style={{ color: '#fbbf24', fontWeight: 900 }}>10 hands</span>.<br />
                 Clock stops automatically when done.
               </div>
             </div>
@@ -567,14 +564,6 @@ export default function ThirdCardDrill() {
             {isResult && (allCorrect ? `✓ Correct — ${winnerLabel}` : `✗ Wrong — ${winnerLabel}`)}
           </div>
         </div>
-
-        {/* Card counter (clock mode) */}
-        {mode === 'clock' && clockStarted && !clockFinished && (
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-            <span style={{ color: '#fbbf24', fontSize: 28, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{cardsConsumed}</span>
-            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 14, fontWeight: 700 }}>/ {DECK_CARDS} cards</span>
-          </div>
-        )}
 
         {/* Cards */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 16, width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,0,0,0.5)', borderRadius: 16, padding: '12px 12px', flex: '0 0 auto' }}>
