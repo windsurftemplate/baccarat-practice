@@ -380,15 +380,15 @@ export default function LandingPage() {
             }} className="glow-btn-red">
               📚 Drills
             </Link>
-            <Link href="/table" style={{
+            <Link href="/rules" style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               flex: 1, maxWidth: 148, height: 50, borderRadius: 10,
-              background: 'linear-gradient(160deg, #6b4d18, #8a6222)',
-              color: '#fef3c7', fontSize: 13, fontWeight: 900, letterSpacing: '0.08em',
+              background: 'linear-gradient(160deg, #1a3a6b, #1e4f9a)',
+              color: '#c8deff', fontSize: 13, fontWeight: 900, letterSpacing: '0.08em',
               textDecoration: 'none', textTransform: 'uppercase',
-              border: '1px solid rgba(200,164,74,0.4)',
-            }} className="glow-btn-gold">
-              🃏 Table
+              border: '1px solid rgba(100,160,255,0.35)',
+            }}>
+              📖 How to Play
             </Link>
           </div>
         </div>

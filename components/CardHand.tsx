@@ -9,16 +9,18 @@ interface Props {
   winner?: boolean;
   /** Offset for interleaved deal order: PLAYER=0, BANKER=200 */
   startDelay?: number;
+  small?: boolean;
 }
 
-export default function CardHand({ label, hand, total, winner, startDelay = 0 }: Props) {
+export default function CardHand({ label, hand, total, winner, startDelay = 0, small = false }: Props) {
+  const minH = small ? 'clamp(54px, 14vw, 88px)' : 'clamp(74px, 13vw, 216px)';
   return (
     <div className="flex flex-col items-center gap-1">
       {/* Cards row — no empty placeholders; show nothing until dealt */}
-      <div className="flex gap-1 items-end" style={{ minHeight: 'clamp(74px, 13vw, 216px)' }}>
+      <div className="flex gap-1 items-end" style={{ minHeight: minH }}>
         {hand.map((card, i) => (
           // Interleaved delay: P1=0, B1=200, P2=400, B2=600
-          <Card key={i} card={card} delay={startDelay + i * 400} />
+          <Card key={i} card={card} delay={startDelay + i * 400} small={small} />
         ))}
       </div>
 

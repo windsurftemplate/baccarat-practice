@@ -79,14 +79,55 @@ export default function RulesPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto" style={{ padding: '20px 16px' }}>
+        <div style={{ maxWidth: 560, margin: '0 auto' }}>
 
-        {/* Objective */}
-        <Section title="Objective">
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, lineHeight: 1.8, margin: 0 }}>
-            Baccarat is a comparing card game between two hands: <span style={{ color: '#93c5fd', fontWeight: 700 }}>Player</span> and{' '}
-            <span style={{ color: '#fca5a5', fontWeight: 700 }}>Banker</span>. The hand closest to{' '}
-            <span style={{ color: '#e8c86a', fontWeight: 900 }}>9</span> wins. Players bet on which hand wins, or on a Tie — the dealer handles all the drawing automatically according to fixed rules.
+        {/* What is Baccarat */}
+        <Section title="What is Baccarat?">
+          <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 13, lineHeight: 1.9, margin: '0 0 12px' }}>
+            Baccarat is one of the <strong style={{ color: '#f5f0e8' }}>easiest casino games to play</strong> — and it has some of the best odds in the house. Despite looking fancy, the actual gameplay is simple: you place a bet, then watch the dealer do everything. No decisions required.
           </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+            <div style={{ background: 'rgba(37,99,235,0.12)', border: '1px solid rgba(93,155,248,0.35)', borderRadius: 10, padding: '12px 14px' }}>
+              <div style={{ color: '#93c5fd', fontWeight: 900, fontSize: 13, marginBottom: 4 }}>Player</div>
+              <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, lineHeight: 1.6 }}>One of two hands dealt. Has nothing to do with you personally — it's just a name.</div>
+            </div>
+            <div style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 10, padding: '12px 14px' }}>
+              <div style={{ color: '#fca5a5', fontWeight: 900, fontSize: 13, marginBottom: 4 }}>Banker</div>
+              <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, lineHeight: 1.6 }}>The other hand. Also just a name — doesn't represent the casino or the dealer.</div>
+            </div>
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, lineHeight: 1.85, margin: '0 0 12px' }}>
+            Before cards are dealt, you bet on which hand will win — <span style={{ color: '#93c5fd', fontWeight: 700 }}>Player</span>, <span style={{ color: '#fca5a5', fontWeight: 700 }}>Banker</span>, or <span style={{ color: '#4ade80', fontWeight: 700 }}>Tie</span>. Then the dealer deals four cards (two to each hand) and follows a strict set of rules to determine if a third card is drawn. The hand closest to <span style={{ color: '#e8c86a', fontWeight: 900, fontSize: 15 }}>9</span> wins.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <div style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ color: '#93c5fd', fontWeight: 900, fontSize: 12 }}>Bet on Player</span>
+                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 2 }}>No commission</div>
+              </div>
+              <span style={{ color: '#e8c86a', fontWeight: 900, fontSize: 15 }}>1:1</span>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ color: '#fca5a5', fontWeight: 900, fontSize: 12 }}>Bet on Banker</span>
+                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 2 }}>5% commission — still best odds in baccarat</div>
+              </div>
+              <span style={{ color: '#e8c86a', fontWeight: 900, fontSize: 15 }}>1:1</span>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ color: '#4ade80', fontWeight: 900, fontSize: 12 }}>Bet on Tie</span>
+                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 2 }}>Happens ~9% of the time — tempting but high house edge</div>
+              </div>
+              <span style={{ color: '#e8c86a', fontWeight: 900, fontSize: 15 }}>9:1</span>
+            </div>
+          </div>
+          <div style={{ marginTop: 10, background: 'rgba(232,200,106,0.06)', border: '1px solid rgba(232,200,106,0.2)', borderRadius: 10, padding: '10px 14px' }}>
+            <div style={{ color: '#e8c86a', fontWeight: 900, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 5 }}>Why Banker is the "right" bet</div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, lineHeight: 1.7 }}>
+              Banker wins slightly more often than Player — about <strong style={{ color: '#f5f0e8' }}>45.8% vs 44.6%</strong> of hands. Even after the 5% commission, Banker has a lower house edge (1.06%) compared to Player (1.24%). Tie is a trap at 14.4% house edge.
+            </div>
+          </div>
         </Section>
 
         {/* Card Values */}
@@ -407,6 +448,7 @@ export default function RulesPage() {
           </Link>
         </div>
 
+        </div>{/* end max-width wrapper */}
       </div>
     </div>
   );
