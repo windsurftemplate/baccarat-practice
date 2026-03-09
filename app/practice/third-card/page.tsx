@@ -570,14 +570,14 @@ export default function ThirdCardDrill() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <div style={{ color: '#fca5a5', fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)', borderRadius: 5, padding: '2px 10px', textTransform: 'uppercase' }}>Banker</div>
             <div style={{ display: 'flex', gap: 6 }}>
-              {bankerHand.map((card, i) => <CardView key={i} card={card} delay={i * 120} />)}
+              {bankerHand.map((card, i) => <CardView key={i} card={card} delay={i * 120} small />)}
             </div>
           </div>
-          <div style={{ paddingTop: 50, color: 'rgba(255,255,255,0.18)', fontSize: 16, flexShrink: 0 }}>VS</div>
+          <div style={{ paddingTop: 36, color: 'rgba(255,255,255,0.18)', fontSize: 16, flexShrink: 0 }}>VS</div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <div style={{ color: '#93c5fd', fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', background: 'rgba(37,99,235,0.2)', border: '1px solid rgba(37,99,235,0.4)', borderRadius: 5, padding: '2px 10px', textTransform: 'uppercase' }}>Player</div>
             <div style={{ display: 'flex', gap: 6 }}>
-              {playerHand.map((card, i) => <CardView key={i} card={card} delay={i * 120} />)}
+              {playerHand.map((card, i) => <CardView key={i} card={card} delay={i * 120} small />)}
             </div>
           </div>
         </div>
