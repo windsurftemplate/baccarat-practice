@@ -17,6 +17,7 @@ interface DrillStats {
   handsCorrect: number;
   playerErrors: number;
   bankerErrors: number;
+  outcomeErrors: number;
   streak: number;
   bestStreak: number;
   // heatmap: bankerTotal (0-7) × playerThirdValue (0-9) → { correct, total }
@@ -35,6 +36,7 @@ interface DrillState {
 
 type DrillAction =
   | { type: 'ANSWER'; hit: boolean }
+  | { type: 'OUTCOME_ERROR' }
   | { type: 'NEXT_HAND' }
   | { type: 'RESET_STATS' };
 
@@ -93,7 +95,7 @@ function bankerExplanation(bTotal: number, playerThird: Card | null, shouldDraw:
 }
 
 const emptyStats = (): DrillStats => ({
-  handsPlayed: 0, handsCorrect: 0, playerErrors: 0, bankerErrors: 0,
+  handsPlayed: 0, handsCorrect: 0, playerErrors: 0, bankerErrors: 0, outcomeErrors: 0,
   streak: 0, bestStreak: 0, heatmap: {},
 });
 
@@ -150,6 +152,7 @@ function reducer(state: DrillState, action: DrillAction, hardOnly: boolean): Dri
             handsCorrect: stats.handsCorrect + (allCorrect ? 1 : 0),
             playerErrors: stats.playerErrors + (pCorrect ? 0 : 1),
             bankerErrors: stats.bankerErrors + (correct ? 0 : 1),
+            outcomeErrors: stats.outcomeErrors,
             streak: newStreak,
             bestStreak: Math.max(stats.bestStreak, newStreak),
             heatmap: newHeatmap,
@@ -163,6 +166,9 @@ function reducer(state: DrillState, action: DrillAction, hardOnly: boolean): Dri
       const dealt = dealFresh(state.shoe, hardOnly);
       return { ...dealt, phase: 'player-decision', playerResult: null, bankerResult: null, stats: state.stats };
     }
+
+    case 'OUTCOME_ERROR':
+      return { ...state, stats: { ...state.stats, outcomeErrors: state.stats.outcomeErrors + 1 } };
 
     case 'RESET_STATS':
       return { ...state, stats: emptyStats() };
@@ -291,6 +297,7 @@ export default function ThirdCardDrill() {
           if (state.phase === 'result') {
             // Timeout on outcome selection = mark as wrong
             setOutcomeSelected('__timeout__');
+            dispatch({ type: 'OUTCOME_ERROR' });
           } else {
             dispatch({ type: 'ANSWER', hit: false });
           }
@@ -430,6 +437,7 @@ export default function ThirdCardDrill() {
             <StatRow label="Perfect" value={stats.handsPlayed > 0 ? `${stats.handsCorrect} (${pct}%)` : '—'} color="#4ade80" />
             <StatRow label="Player Errors" value={String(stats.playerErrors)} color="#93c5fd" />
             <StatRow label="Banker Errors" value={String(stats.bankerErrors)} color="#fca5a5" />
+            <StatRow label="Outcome Errors" value={String(stats.outcomeErrors)} color="#f472b6" />
             <StatRow label="Current Streak" value={String(stats.streak)} color="#fbbf24" />
             <StatRow label="Best Streak" value={String(stats.bestStreak)} color="#f59e0b" />
           </div>
@@ -617,14 +625,14 @@ export default function ThirdCardDrill() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {OUTCOME_BTNS.map(btn => (
-                  <button key={btn.key} onClick={() => setOutcomeSelected(btn.key)} style={{
+                  <button key={btn.key} onClick={() => { setOutcomeSelected(btn.key); if (btn.key !== correctOutcome) dispatch({ type: 'OUTCOME_ERROR' }); }} style={{
                     height: 54, fontSize: 13, fontWeight: 900, borderRadius: 12,
                     background: btn.bg, color: btn.color, border: `1.5px solid ${btn.border}`,
                     cursor: 'pointer', touchAction: 'manipulation',
                   }}>{btn.label}</button>
                 ))}
               </div>
-              <button onClick={() => setOutcomeSelected('none')} style={{
+              <button onClick={() => { setOutcomeSelected('none'); if ('none' !== correctOutcome) dispatch({ type: 'OUTCOME_ERROR' }); }} style={{
                 width: '100%', height: 42, fontSize: 12, fontWeight: 700, borderRadius: 12,
                 background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)',
                 border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', touchAction: 'manipulation',
