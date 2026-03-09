@@ -13,8 +13,8 @@ interface Props {
   faceDown?: boolean;
 }
 
-const CARD_W = 'clamp(52px, 9vw, 152px)';
-const CARD_H = 'clamp(74px, 13vw, 216px)';
+const CARD_W = 'clamp(72px, 13vw, 190px)';
+const CARD_H = 'clamp(100px, 18vw, 266px)';
 
 export default function Card({ card, delay = 0, faceDown = false }: Props) {
   if (faceDown) {
