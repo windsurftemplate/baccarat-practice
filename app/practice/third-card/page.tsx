@@ -256,6 +256,7 @@ const OUTCOME_BTNS = [
 
 export default function ThirdCardDrill() {
   const [mode, setMode] = useState<DrillMode>('normal');
+  const [view, setView] = useState<'dealer' | 'player'>('dealer');
   const [showStats, setShowStats] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const hardOnly = mode === 'hard';
@@ -393,6 +394,17 @@ export default function ThirdCardDrill() {
           ♦ Third Card Rules ♦
         </div>
         <div style={{ display: 'flex', gap: 5 }}>
+          {/* View toggle */}
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.07)', borderRadius: 5, border: '1px solid rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+            {(['dealer', 'player'] as const).map(v => (
+              <button key={v} onClick={() => setView(v)} style={{
+                fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase',
+                padding: '3px 7px', cursor: 'pointer', touchAction: 'manipulation', border: 'none',
+                background: view === v ? 'rgba(232,200,106,0.25)' : 'transparent',
+                color: view === v ? '#e8c86a' : 'rgba(255,255,255,0.3)',
+              }}>{v}</button>
+            ))}
+          </div>
           <button style={{ fontSize: 10, background: 'rgba(232,200,106,0.12)', color: '#e8c86a', border: '1px solid rgba(232,200,106,0.3)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', touchAction: 'manipulation' }}
             onClick={() => { setShowStats(s => !s); setShowHeatmap(false); }}>Stats</button>
           <button style={{ fontSize: 10, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', touchAction: 'manipulation' }}
@@ -574,7 +586,7 @@ export default function ThirdCardDrill() {
         </div>
 
         {/* Cards */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 16, width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,0,0,0.5)', borderRadius: 16, padding: '12px 12px', flex: '0 0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 16, width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,0,0,0.5)', borderRadius: 16, padding: '12px 12px', flex: '0 0 auto', flexDirection: view === 'player' ? 'row-reverse' : 'row' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <div style={{ color: '#fca5a5', fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.4)', borderRadius: 5, padding: '2px 10px', textTransform: 'uppercase' }}>Banker</div>
             <div style={{ display: 'flex', gap: 6 }}>
