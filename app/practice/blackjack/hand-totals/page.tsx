@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card } from '../../../../lib/types';
 import { bjTotal, isBust, makeOptions, randomCard } from '../../../../lib/bj';
 import CardView from '../../../../components/Card';
 
@@ -39,7 +38,7 @@ export default function BJHandTotalsDrill() {
       const newStreak = correct ? s.streak + 1 : 0;
       return { correct: s.correct + (correct ? 1 : 0), total: s.total + 1, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak) };
     });
-    if (correct) setTimeout(() => nextHand(), 380);
+    if (correct) setTimeout(() => nextHand(cardCount), 380);
   }
 
   const pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
@@ -51,7 +50,7 @@ export default function BJHandTotalsDrill() {
         style={{ background: 'rgba(0,0,0,0.65)', borderBottom: '2px solid #1d4ed8' }}>
         <Link href="/practice/blackjack" style={{ color: 'rgba(232,200,106,0.6)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>← Blackjack</Link>
         <div style={{ color: '#e8c86a', fontSize: 11, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' }}>🔢 Hand Totals</div>
-        <button onClick={() => setStats(emptyStats())} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer' }}>Reset</button>
+        <button onClick={() => { setStats(emptyStats()); nextHand(); setAnswer(null); }} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '3px 8px', cursor: 'pointer' }}>Reset</button>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-around', padding: '6px 16px', background: 'rgba(0,0,0,0.35)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
