@@ -6,6 +6,7 @@ import CardView from '../../../components/Card';
 
 const SUITS: Suit[] = ['spades', 'hearts', 'diamonds', 'clubs'];
 const RANKS: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const RANKS_NO_FACE: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 function rankValue(rank: Rank): number {
   if (rank === 'A') return 1;
@@ -19,8 +20,9 @@ function anchorRank(value: number): Rank {
   return String(value) as Rank;
 }
 
-function randomCard(): Card {
-  const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
+function randomCard(noFace = false): Card {
+  const pool = noFace ? RANKS_NO_FACE : RANKS;
+  const rank = pool[Math.floor(Math.random() * pool.length)];
   const suit = SUITS[Math.floor(Math.random() * SUITS.length)];
   return { rank, suit, value: rankValue(rank) };
 }
@@ -55,9 +57,9 @@ function rawTotal(hand: Card[]): number {
   return hand.reduce((sum, c) => sum + c.value, 0);
 }
 
-function freshRound(anchorValue: number, extraCards = 2) {
+function freshRound(anchorValue: number, extraCards = 2, noFace = false) {
   const anchor = makeAnchorCard(anchorValue);
-  const randoms = Array.from({ length: extraCards }, randomCard);
+  const randoms = Array.from({ length: extraCards }, () => randomCard(noFace));
   const hand = [anchor, ...randoms];
   return { hand, options: makeOptions(rawTotal(hand)) };
 }
@@ -65,25 +67,32 @@ function freshRound(anchorValue: number, extraCards = 2) {
 export default function AnchorTotalsDrill() {
   const [anchor, setAnchor] = useState(8);
   const [cardCount, setCardCount] = useState(2);
-  const [{ hand, options }, setRound] = useState(() => freshRound(8, 2));
+  const [noFace, setNoFace] = useState(false);
+  const [{ hand, options }, setRound] = useState(() => freshRound(8, 2, false));
   const [answer, setAnswer] = useState<AnswerState>(null);
   const [stats, setStats] = useState<Stats>(emptyStats);
 
   const correctTotal = rawTotal(hand);
 
-  function nextHand(anchorValue = anchor, count = cardCount) {
-    setRound(freshRound(anchorValue, count));
+  function nextHand(anchorValue = anchor, count = cardCount, nf = noFace) {
+    setRound(freshRound(anchorValue, count, nf));
     setAnswer(null);
   }
 
   function handleAnchorChange(value: number) {
     setAnchor(value);
-    nextHand(value, cardCount);
+    nextHand(value, cardCount, noFace);
   }
 
   function handleCardCountChange(count: number) {
     setCardCount(count);
-    nextHand(anchor, count);
+    nextHand(anchor, count, noFace);
+  }
+
+  function handleNoFaceToggle() {
+    const next = !noFace;
+    setNoFace(next);
+    nextHand(anchor, cardCount, next);
   }
 
   function handleAnswer(val: number) {
@@ -94,7 +103,7 @@ export default function AnchorTotalsDrill() {
       const newStreak = correct ? s.streak + 1 : 0;
       return { correct: s.correct + (correct ? 1 : 0), total: s.total + 1, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak) };
     });
-    if (correct) setTimeout(() => nextHand(anchor, cardCount), 380);
+    if (correct) setTimeout(() => nextHand(anchor, cardCount, noFace), 380);
   }
 
   const pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
@@ -157,6 +166,16 @@ export default function AnchorTotalsDrill() {
               ))}
             </div>
           </div>
+          <button onClick={handleNoFaceToggle} style={{
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
+            padding: '5px 14px', borderRadius: 7, cursor: 'pointer', touchAction: 'manipulation',
+            background: noFace ? 'rgba(251,191,36,0.18)' : 'rgba(255,255,255,0.06)',
+            border: noFace ? '1.5px solid #fbbf24' : '1px solid rgba(255,255,255,0.12)',
+            color: noFace ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+            transition: 'all 0.12s',
+          }}>
+            {noFace ? '✓ No 10s / Face' : 'No 10s / Face'}
+          </button>
         </div>
 
         {/* Hand */}
