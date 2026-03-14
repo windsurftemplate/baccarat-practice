@@ -6,6 +6,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Baccarat Practice — Corporation Banker",
   description: "Practice baccarat with Gold 7, Jade 8, Small Ruby and Big Ruby side bets",
+  other: {
+    'google-adsense-account': 'ca-pub-3560938868524941',
+  },
 };
 
 export const viewport: Viewport = {
