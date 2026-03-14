@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card } from '../../../../lib/types';
 import { bjTotal, isBust, randomCard } from '../../../../lib/bj';
 import CardView from '../../../../components/Card';
 

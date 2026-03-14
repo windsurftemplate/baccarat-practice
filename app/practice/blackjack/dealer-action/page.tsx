@@ -54,7 +54,7 @@ export default function DealerActionDrill() {
       const newStreak = correct ? s.streak + 1 : 0;
       return { correct: s.correct + (correct ? 1 : 0), total: s.total + 1, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak) };
     });
-    if (correct) setTimeout(() => nextHand(h17), 380);
+    if (correct) { const rule = h17; setTimeout(() => nextHand(rule), 380); }
   }
 
   const pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
