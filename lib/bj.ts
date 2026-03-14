@@ -2,14 +2,14 @@ import { Card, Suit, Rank } from './types';
 
 export const SUITS: Suit[] = ['spades', 'hearts', 'diamonds', 'clubs'];
 export const RANKS: Rank[] = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-export const RANKS_NO_FACE: Rank[] = ['A','2','3','4','5','6','7','8','9'];
+export const RANKS_ACE_TO_NINE: Rank[] = ['A','2','3','4','5','6','7','8','9'];
 
 export function randomSuit(): Suit {
   return SUITS[Math.floor(Math.random() * SUITS.length)];
 }
 
 export function randomRank(noFace = false): Rank {
-  const pool = noFace ? RANKS_NO_FACE : RANKS;
+  const pool = noFace ? RANKS_ACE_TO_NINE : RANKS;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -31,7 +31,7 @@ export function randomCard(noFace = false): Card {
 
 /** BJ total: aces start as 11, reduce by 10 each time hand busts */
 export function bjTotal(hand: Card[]): number {
-  let total = hand.reduce((s, c) => s + c.value, 0);
+  let total = hand.reduce((s, c) => s + bjRankValue(c.rank), 0);
   let aces = hand.filter(c => c.rank === 'A').length;
   while (total > 21 && aces > 0) { total -= 10; aces--; }
   return total;
@@ -45,7 +45,7 @@ export function isBust(hand: Card[]): boolean {
 export function isSoft(hand: Card[]): boolean {
   const hasAce = hand.some(c => c.rank === 'A');
   if (!hasAce) return false;
-  const hardTotal = hand.reduce((s, c) => s + (c.rank === 'A' ? 1 : c.value), 0);
+  const hardTotal = hand.reduce((s, c) => s + (c.rank === 'A' ? 1 : bjRankValue(c.rank)), 0);
   return hardTotal + 10 <= 21;
 }
 
