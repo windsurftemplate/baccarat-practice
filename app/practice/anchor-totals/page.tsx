@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Card, Suit, Rank } from '../../../lib/types';
-import { handTotal } from '../../../lib/baccarat';
 import CardView from '../../../components/Card';
 
 const SUITS: Suit[] = ['spades', 'hearts', 'diamonds', 'clubs'];
@@ -38,8 +37,13 @@ function makeAnchorCard(anchorValue: number): Card {
 
 function makeOptions(correct: number): number[] {
   const pool = new Set([correct]);
-  const all = [0,1,2,3,4,5,6,7,8,9].filter(n => n !== correct).sort(() => Math.random() - 0.5);
-  for (const n of all) { if (pool.size >= 4) break; pool.add(n); }
+  const candidates: number[] = [];
+  for (let d = 1; d <= 15; d++) {
+    if (correct - d >= 0) candidates.push(correct - d);
+    if (correct + d <= 90) candidates.push(correct + d);
+  }
+  candidates.sort(() => Math.random() - 0.5);
+  for (const n of candidates) { if (pool.size >= 4) break; pool.add(n); }
   return [...pool].sort(() => Math.random() - 0.5);
 }
 
@@ -47,28 +51,39 @@ interface Stats { correct: number; total: number; streak: number; bestStreak: nu
 const emptyStats = (): Stats => ({ correct: 0, total: 0, streak: 0, bestStreak: 0 });
 type AnswerState = { selected: number; correct: boolean } | null;
 
-function freshRound(anchorValue: number) {
+function rawTotal(hand: Card[]): number {
+  return hand.reduce((sum, c) => sum + c.value, 0);
+}
+
+function freshRound(anchorValue: number, extraCards = 2) {
   const anchor = makeAnchorCard(anchorValue);
-  const hand = [anchor, randomCard(), randomCard()];
-  return { hand, options: makeOptions(handTotal(hand)) };
+  const randoms = Array.from({ length: extraCards }, randomCard);
+  const hand = [anchor, ...randoms];
+  return { hand, options: makeOptions(rawTotal(hand)) };
 }
 
 export default function AnchorTotalsDrill() {
   const [anchor, setAnchor] = useState(8);
-  const [{ hand, options }, setRound] = useState(() => freshRound(8));
+  const [cardCount, setCardCount] = useState(2);
+  const [{ hand, options }, setRound] = useState(() => freshRound(8, 2));
   const [answer, setAnswer] = useState<AnswerState>(null);
   const [stats, setStats] = useState<Stats>(emptyStats);
 
-  const correctTotal = handTotal(hand);
+  const correctTotal = rawTotal(hand);
 
-  function nextHand(anchorValue = anchor) {
-    setRound(freshRound(anchorValue));
+  function nextHand(anchorValue = anchor, count = cardCount) {
+    setRound(freshRound(anchorValue, count));
     setAnswer(null);
   }
 
   function handleAnchorChange(value: number) {
     setAnchor(value);
-    nextHand(value);
+    nextHand(value, cardCount);
+  }
+
+  function handleCardCountChange(count: number) {
+    setCardCount(count);
+    nextHand(anchor, count);
   }
 
   function handleAnswer(val: number) {
@@ -79,7 +94,7 @@ export default function AnchorTotalsDrill() {
       const newStreak = correct ? s.streak + 1 : 0;
       return { correct: s.correct + (correct ? 1 : 0), total: s.total + 1, streak: newStreak, bestStreak: Math.max(s.bestStreak, newStreak) };
     });
-    if (correct) setTimeout(() => nextHand(), 380);
+    if (correct) setTimeout(() => nextHand(anchor, cardCount), 380);
   }
 
   const pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : null;
@@ -107,23 +122,40 @@ export default function AnchorTotalsDrill() {
       <div className="flex-1 felt flex flex-col items-center justify-center gap-8 px-6">
 
         <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-          What is the baccarat total?
+          What is the total?
         </div>
 
-        {/* Card picker */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Anchor card</div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {[1,2,3,4,5,6,7,8,9].map(v => (
-              <button key={v} onClick={() => handleAnchorChange(v)} style={{
-                width: 32, height: 32, fontSize: 14, fontWeight: 900, borderRadius: 7,
-                background: anchor === v ? 'rgba(232,200,106,0.2)' : 'rgba(255,255,255,0.06)',
-                border: anchor === v ? '2px solid #e8c86a' : '1px solid rgba(255,255,255,0.12)',
-                color: anchor === v ? '#e8c86a' : 'rgba(255,255,255,0.45)',
-                cursor: 'pointer', touchAction: 'manipulation',
-                transition: 'all 0.12s',
-              }}>{v}</button>
-            ))}
+        {/* Pickers */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Anchor card</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[1,2,3,4,5,6,7,8,9].map(v => (
+                <button key={v} onClick={() => handleAnchorChange(v)} style={{
+                  width: 32, height: 32, fontSize: 14, fontWeight: 900, borderRadius: 7,
+                  background: anchor === v ? 'rgba(232,200,106,0.2)' : 'rgba(255,255,255,0.06)',
+                  border: anchor === v ? '2px solid #e8c86a' : '1px solid rgba(255,255,255,0.12)',
+                  color: anchor === v ? '#e8c86a' : 'rgba(255,255,255,0.45)',
+                  cursor: 'pointer', touchAction: 'manipulation',
+                  transition: 'all 0.12s',
+                }}>{v}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Extra cards</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[1,2,3,4,5,6,7,8,9].map(n => (
+                <button key={n} onClick={() => handleCardCountChange(n)} style={{
+                  width: 32, height: 32, fontSize: 14, fontWeight: 900, borderRadius: 7,
+                  background: cardCount === n ? 'rgba(148,163,184,0.25)' : 'rgba(255,255,255,0.06)',
+                  border: cardCount === n ? '2px solid #94a3b8' : '1px solid rgba(255,255,255,0.12)',
+                  color: cardCount === n ? '#cbd5e1' : 'rgba(255,255,255,0.45)',
+                  cursor: 'pointer', touchAction: 'manipulation',
+                  transition: 'all 0.12s',
+                }}>{n}</button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -143,7 +175,7 @@ export default function AnchorTotalsDrill() {
             }}>
               {answer.correct
                 ? `✓ Total is ${correctTotal}`
-                : `✗ Total is ${correctTotal} (${hand.map(c => c.value).join(' + ')} mod 10)`}
+                : `✗ Total is ${correctTotal} (${hand.map(c => c.value).join(' + ')})`}
             </div>
           )}
         </div>
@@ -185,7 +217,7 @@ export default function AnchorTotalsDrill() {
         )}
 
         <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, textAlign: 'center' }}>
-          Gold-bordered card is fixed · other two are random · drop the tens digit
+          Gold-bordered card is fixed · other cards are random
         </div>
       </div>
     </div>
