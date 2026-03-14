@@ -79,6 +79,17 @@ const DRILLS = [
     icon: '🧮',
     tags: ['Speed', 'Bonus', 'System'],
   },
+  {
+    href: '/practice/blackjack',
+    title: 'Blackjack Drills',
+    subtitle: 'Dealer practice',
+    description: 'Eight drills for blackjack dealers: hand totals, bust detection, dealer actions, basic strategy, payouts, and side bets.',
+    color: '#1d4ed8',
+    glow: 'rgba(59,130,246,0.5)',
+    border: 'rgba(147,197,253,0.4)',
+    icon: '🃏',
+    tags: ['Blackjack', 'Dealer', 'Strategy', 'Math'],
+  },
 ];
 
 export default function PracticeHub() {
