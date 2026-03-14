@@ -47,6 +47,17 @@ const DRILLS = [
     tags: ['Arithmetic', 'Speed'],
   },
   {
+    href: '/practice/anchor-totals',
+    title: 'Anchor Totals',
+    subtitle: 'Count with a fixed card',
+    description: 'Pick a card value (1–9) to anchor every hand. Two random cards are added — tap the total. Great for drilling 8s and 9s.',
+    color: '#0f766e',
+    glow: 'rgba(20,184,166,0.5)',
+    border: 'rgba(94,234,212,0.4)',
+    icon: '🎯',
+    tags: ['Arithmetic', 'Focused', 'Speed'],
+  },
+  {
     href: '/practice/payouts',
     title: 'Payout Calculator',
     subtitle: 'What is the payout?',
